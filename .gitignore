@@ -1,0 +1,23 @@
+# deps
+node_modules
+# build
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+
+# local editor/agent settings
+.claude/settings.local.json
+# logs
+logs
+*.log
+npm-debug.log*
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+# env
+.env
+.env.*
+!.env.example

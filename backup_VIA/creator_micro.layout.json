@@ -1,0 +1,110 @@
+{
+  "name": "Creator Micro",
+  "vendorProductId": 1464657635,
+  "macros": [
+    "{+KC_LALT}a{-KC_LALT}",
+    "{KC_LSFT,KC_I}",
+    "{KC_LCTL,KC_LGUI,KC_M}",
+    "{KC_LCTL,KC_LALT,KC_V}",
+    "{KC_LCTL,KC_LALT,KC_H}",
+    "{KC_LSFT,KC_LGUI,KC_L}",
+    "{+KC_LCTL}{+KC_LALT}m{-KC_LALT}{-KC_LCTL}",
+    "{+KC_LALT}{+KC_LSFT}v{-KC_LALT}{-KC_LSFT}",
+    "{+KC_LALT}{+KC_LSFT}h{-KC_LALT}{-KC_LSFT}",
+    "{+KC_LALT}d{-KC_LALT}",
+    "{+KC_LCTL}{+KC_LALT}g{-KC_LALT}{-KC_LCTL}",
+    "{+KC_LCTL}{+KC_LSFT}l{-KC_LCTL}{-KC_LSFT}",
+    "{+KC_LCTL}k{-KC_LCTL}",
+    "",
+    "",
+    ""
+  ],
+  "layers": [
+    [
+      "G(KC_T)",
+      "KC_V",
+      "MACRO(12)",
+      "KC_NO",
+      "KC_F",
+      "KC_R",
+      "KC_K",
+      "MACRO(2)",
+      "A(KC_A)",
+      "MACRO(3)",
+      "MACRO(4)",
+      "A(KC_D)",
+      "RGB_TOG",
+      "KC_T",
+      "MACRO(5)",
+      "TO(1)"
+    ],
+    [
+      "G(KC_T)",
+      "KC_V",
+      "MACRO(12)",
+      "KC_NO",
+      "MACRO(10)",
+      "KC_R",
+      "KC_K",
+      "MACRO(6)",
+      "MACRO(0)",
+      "MACRO(7)",
+      "MACRO(8)",
+      "MACRO(9)",
+      "RGB_TOG",
+      "KC_T",
+      "MACRO(11)",
+      "TO(2)"
+    ],
+    [
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "TO(2)",
+      "KC_NO",
+      "KC_NO",
+      "TO(3)"
+    ],
+    [
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "KC_NO",
+      "TO(3)",
+      "KC_NO",
+      "KC_NO",
+      "TO(0)"
+    ]
+  ],
+  "encoders": [
+    [
+      ["KC_MINS", "KC_EQL"],
+      ["KC_TRNS", "KC_TRNS"],
+      ["KC_NO", "KC_NO"],
+      ["KC_NO", "KC_NO"]
+    ],
+    [
+      ["G(KC_Z)", "LSG(KC_Z)"],
+      ["G(KC_Z)", "LSG(KC_Z)"],
+      ["KC_NO", "KC_NO"],
+      ["KC_NO", "KC_NO"]
+    ]
+  ]
+}

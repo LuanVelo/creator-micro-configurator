@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Tokens do design (Figma): app claro, glassy, acento verde. */
+@theme {
+  --color-accent: #22c55e;
+  --color-accent-soft: #86efac;
+  --color-key-selected: #3b82f6;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
