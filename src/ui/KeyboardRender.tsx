@@ -2,8 +2,7 @@ import type React from "react";
 import { useState } from "react";
 import { useApp, selectActivePreset } from "../store/app.ts";
 import { SLOT_LAYOUT, type Slot } from "../model/layout.ts";
-import { ACTION_CATALOG } from "../model/actions.ts";
-import { keyLabel } from "./labels.ts";
+import { actionLabelFor, keyLabel } from "./labels.ts";
 import rawSvg from "../assets/keyboard49.svg?raw";
 
 /**
@@ -41,15 +40,6 @@ const KH = 51.92;
 
 function center(slot: Slot): { cx: number; cy: number } {
   return { cx: COLX[slot.col], cy: ROWY[slot.row] };
-}
-
-/** Rótulo amigável do atalho (para o tooltip), buscado no catálogo por keycode. */
-function actionLabelFor(kc: string): string | undefined {
-  for (const g of ACTION_CATALOG) {
-    const a = g.actions.find((x) => x.keycode === kc);
-    if (a) return a.label;
-  }
-  return undefined;
 }
 
 export function KeyboardRender({ interactive = true }: { interactive?: boolean }) {

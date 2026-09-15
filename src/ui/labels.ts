@@ -2,6 +2,17 @@
  * Rótulos curtos de keycode para a UI. Usa notação Mac (⌘⌥⇧⌃) — o mesmo eixo
  * que a detecção de SO vai automatizar na Fase 2.
  */
+import { ACTION_CATALOG } from "../model/actions.ts";
+
+/** Rótulo amigável do atalho (para o tooltip), buscado no catálogo por keycode. */
+export function actionLabelFor(kc: string): string | undefined {
+  for (const g of ACTION_CATALOG) {
+    const a = g.actions.find((x) => x.keycode === kc);
+    if (a) return a.label;
+  }
+  return undefined;
+}
+
 const MOD_GLYPH: Record<string, string> = {
   G: "⌘",
   A: "⌥",

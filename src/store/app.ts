@@ -27,6 +27,8 @@ const seed = importViaJson(backupJson, { id: "figma-design", name: "Figma Design
 export type SidePanelTab = "presets" | "actions";
 export type ConnectionState = "disconnected" | "connecting" | "connected";
 export type TransportKind = "webhid" | "mock";
+/** Render do pad: SVG do Figma (v1) ou modelo 3D (v2). Os dois convivem pra comparar. */
+export type PadView = "2d" | "3d";
 
 // Singletons não-reativos do transporte. `writeArmed` só fica true durante um
 // upload explícito — fora disso o GuardedTransport mantém tudo read-only (§8.4).
@@ -41,6 +43,7 @@ interface AppState {
   selectedSlot: number | null;
   panelTab: SidePanelTab;
   panelCollapsed: boolean;
+  padView: PadView;
 
   // conexão com o hardware
   connection: ConnectionState;
@@ -56,6 +59,7 @@ interface AppState {
   setPanelTab: (tab: SidePanelTab) => void;
   showPanelTab: (tab: SidePanelTab) => void;
   toggleCollapsed: () => void;
+  setPadView: (v: PadView) => void;
   setKeycode: (slotIndex: number, keycode: string) => void;
   setEncoder: (encoderIndex: number, dir: "ccw" | "cw", keycode: string) => void;
 
@@ -100,6 +104,7 @@ export const useApp = create<AppState>()(
       selectedSlot: null,
       panelTab: "presets",
       panelCollapsed: true, // drawer fechado por padrão (idle conectado = 56:2700)
+      padView: "3d",
 
       connection: "disconnected",
       deviceName: null,
@@ -115,6 +120,7 @@ export const useApp = create<AppState>()(
       // abas do header: abre o drawer naquela aba (sai do editor de tecla).
       showPanelTab: (tab) => set({ panelTab: tab, selectedSlot: null, panelCollapsed: false }),
       toggleCollapsed: () => set((s) => ({ panelCollapsed: !s.panelCollapsed })),
+      setPadView: (padView) => set({ padView }),
 
       setKeycode: (slotIndex, keycode) =>
         set((s) =>
@@ -241,8 +247,8 @@ export const useApp = create<AppState>()(
       name: "keymap-store",
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      // só a biblioteca persiste; estado efêmero de UI não.
-      partialize: (s) => ({ presets: s.presets, activePresetId: s.activePresetId }),
+      // biblioteca + preferência de render do pad; estado efêmero de UI não.
+      partialize: (s) => ({ presets: s.presets, activePresetId: s.activePresetId, padView: s.padView }),
     },
   ),
 );

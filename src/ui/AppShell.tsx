@@ -1,5 +1,6 @@
-import { useApp, type TransportKind } from "../store/app.ts";
+import { useApp, type PadView, type TransportKind } from "../store/app.ts";
 import { KeyboardRender } from "./KeyboardRender.tsx";
+import { Keyboard3D } from "./keyboard3d/Keyboard3D.tsx";
 import { RightPanel } from "./RightPanel.tsx";
 import { Header } from "./Header.tsx";
 import { Footer } from "./Footer.tsx";
@@ -12,7 +13,7 @@ import { Footer } from "./Footer.tsx";
  * (fantasma → vivo) numa transição suave ao conectar.
  */
 export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
-  const { panelCollapsed, connection, connect, connError } = useApp();
+  const { panelCollapsed, connection, connect, connError, padView, setPadView } = useApp();
   const connected = connection === "connected";
   const connecting = connection === "connecting";
   const drawerOpen = connected && !panelCollapsed;
@@ -24,21 +25,19 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
         <Header />
 
         <div className="relative flex min-h-0 flex-1 items-center justify-center px-8">
-          {/* o pad "acende" (cor final) e desce até a posição de ativo ao conectar */}
-          <div
-            className="w-auto"
-            style={{
-              aspectRatio: "409 / 469",
-              height: "min(66vh, 540px)",
-              transform: connected ? "translateY(0) scale(1)" : "translateY(-26px) scale(0.985)",
-              filter: connected ? "none" : "grayscale(0.9) brightness(1.15) opacity(0.5)",
-              transition:
-                "transform 700ms cubic-bezier(0.22,0.8,0.24,1), filter 700ms ease-out",
-              willChange: "transform, filter",
-            }}
-          >
-            <KeyboardRender interactive={connected} />
-          </div>
+          {padView === "3d" ? (
+            // 3D ocupa a área toda: a câmera é que enquadra (hero → edição → close)
+            <div className="absolute inset-0">
+              <Keyboard3D
+                interactive={connected}
+                fallback={<PadSvg connected={connected} />}
+              />
+            </div>
+          ) : (
+            <PadSvg connected={connected} />
+          )}
+
+          <PadViewToggle value={padView} onChange={setPadView} />
 
           {/* controles de conexão: some com fade+slide quando conecta */}
           <div
@@ -71,6 +70,44 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
       >
         Fase 0 · Discovery
       </button>
+    </div>
+  );
+}
+
+/** Pad em SVG (v1): o pad "acende" (cor final) e desce até a posição de ativo ao conectar. */
+function PadSvg({ connected }: { connected: boolean }) {
+  return (
+    <div
+      className="w-auto"
+      style={{
+        aspectRatio: "409 / 469",
+        height: "min(66vh, 540px)",
+        transform: connected ? "translateY(0) scale(1)" : "translateY(-26px) scale(0.985)",
+        filter: connected ? "none" : "grayscale(0.9) brightness(1.15) opacity(0.5)",
+        transition: "transform 700ms cubic-bezier(0.22,0.8,0.24,1), filter 700ms ease-out",
+        willChange: "transform, filter",
+      }}
+    >
+      <KeyboardRender interactive={connected} />
+    </div>
+  );
+}
+
+/** Alterna SVG ↔ 3D pra comparar as duas versões (preferência persistida). */
+function PadViewToggle({ value, onChange }: { value: PadView; onChange: (v: PadView) => void }) {
+  return (
+    <div className="absolute right-8 top-2 z-10 inline-flex rounded-full bg-slate-100 p-0.5 text-xs">
+      {(["2d", "3d"] as const).map((v) => (
+        <button
+          key={v}
+          onClick={() => onChange(v)}
+          className={`rounded-full px-3 py-1 font-semibold uppercase transition ${
+            value === v ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          {v}
+        </button>
+      ))}
     </div>
   );
 }
