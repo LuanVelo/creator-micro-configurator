@@ -6,6 +6,10 @@ dist-ssr
 *.local
 *.tsbuildinfo
 
+# blender backups
+*.blend1
+*.blend2
+
 # local editor/agent settings
 .claude/settings.local.json
 # logs

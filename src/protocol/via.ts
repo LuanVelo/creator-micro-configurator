@@ -7,6 +7,7 @@ import { VIA_CMD } from "./commands.ts";
 import {
   BUFFER_HEADER,
   bufferChunks,
+  keycodeToBytes,
   makeReport,
   offsetToBytes,
 } from "./codec.ts";
@@ -100,5 +101,47 @@ export class ViaClient {
       out.set(r.subarray(BUFFER_HEADER, BUFFER_HEADER + size), offset);
     }
     return out;
+  }
+
+  // ── Escrita (Fase 1). Só passa se o modo escrita estiver habilitado no guard. ──
+
+  /** 0x05 — grava 1 tecla (layer,row,col) com keycode 16 bits. */
+  async setKeycode(layer: number, row: number, col: number, keycode: number): Promise<void> {
+    const [hi, lo] = keycodeToBytes(keycode);
+    await this.command(VIA_CMD.dynamic_keymap_set_keycode, [layer, row, col, hi, lo]);
+  }
+
+  /** 0x15 — grava uma direção de encoder. `clockwise` false=ccw, true=cw. */
+  async setEncoder(
+    layer: number,
+    encoderId: number,
+    clockwise: boolean,
+    keycode: number,
+  ): Promise<void> {
+    const [hi, lo] = keycodeToBytes(keycode);
+    await this.command(VIA_CMD.dynamic_keymap_set_encoder, [
+      layer,
+      encoderId,
+      clockwise ? 1 : 0,
+      hi,
+      lo,
+    ]);
+  }
+
+  /**
+   * 0x13 — grava `bytes` no keymap dinâmico a partir de `baseOffset`, em pacotes
+   * de até MAX_BUFFER_CHUNK. Upload em lote: as 4 layers saem em ~4 pacotes.
+   */
+  async setKeymapBuffer(bytes: Uint8Array, baseOffset = 0): Promise<void> {
+    for (const { offset, size } of bufferChunks(bytes.length)) {
+      const [hi, lo] = offsetToBytes(baseOffset + offset);
+      const chunk = Array.from(bytes.subarray(offset, offset + size));
+      await this.command(VIA_CMD.dynamic_keymap_set_buffer, [hi, lo, size, ...chunk]);
+    }
+  }
+
+  /** 0x06 — reseta o keymap dinâmico (recuperação, §8). Não toca no resto da EEPROM. */
+  async resetDynamicKeymap(): Promise<void> {
+    await this.command(VIA_CMD.dynamic_keymap_reset);
   }
 }

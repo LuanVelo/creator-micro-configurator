@@ -1,11 +1,27 @@
 @import "tailwindcss";
 
-/* Tokens do design (Figma): app claro, glassy, acento verde. */
+/* Tokens do design (Figma): app claro, glassy, acento verde.
+ * Semânticos primeiro (superfícies/raios) para plugar o design system depois:
+ * quando os variables do Figma chegarem, remapeia-se aqui e a UI acompanha. */
 @theme {
   --color-accent: #22c55e;
   --color-accent-soft: #86efac;
   --color-key-selected: #3b82f6;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* superfícies */
+  --color-surface: #fafafa; /* fundo do drawer */
+  --color-card: #ffffff; /* cards internos */
+  --color-line: #eceef1; /* divisórias/bordas suaves */
+  --color-ink: #334155; /* texto principal (slate-700) */
+  --color-ink-soft: #94a3b8; /* texto secundário (slate-400) */
+
+  /* raios */
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+
+  /* tile escuro dos ícones de app (Figma "Software logos", node 50:498) */
+  --color-icon-tile: #0d0d10;
 }
 
 html,
