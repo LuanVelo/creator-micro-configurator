@@ -275,11 +275,23 @@ luz do underglow em vez de deixar atravessar limpo.
 
 ### Bloqueante
 
-**UVs.** Zero em todos os objetos. Sem UV não tem bake, e sem bake não tem
-material no glTF. É o maior bloco de trabalho restante, maior que os materiais
-em si. As 12 teclas dividem uma mesh, então dividem UV — os ícones por tecla
-saem de um atlas com deslocamento no nó Mapping, aproveitando que o slot de
-material está em link `OBJECT`.
+**UVs.** Placa e disco resolvidos (2026-09-14, ver `uv-instrucoes.md`): `UVMap`
+planar exato em mm — `plate_top` com `u=(x+46)/92, v=(y+46)/92`; `base_bottom`
+com X espelhado, `u=(43−x)/86, v=(y+43)/86`. Validado com imagem de teste (F +
+seta + alvos nos parafusos) de cima e de baixo. **Resto continua sem UV** —
+keycaps, case, switches, knob, roller, borracha. Sem UV não tem bake, e sem bake
+não tem material no glTF. As 12 teclas dividem uma mesh, então dividem UV — os
+ícones por tecla saem de um atlas com deslocamento no nó Mapping, aproveitando
+que o slot de material está em link `OBJECT` (decisão adiada pelo usuário).
+
+**Serigrafia.** Gabaritos vetoriais no Figma (arquivo "Keymap | UV map",
+`T62ai1Bw75W1pVW7C8ZKRO`, página UV): frame `placa_serigrafia` 920×920 com as
+guias travadas por baixo em `_guias_placa`. Export em
+`3d/textures/src/placa_serigrafia.png` (2048², RGBA, só o alfa importa) e ligado
+em `plate_white_gloss`: alfa → Mix branco 0,85 / tinta 0,02 no Base Color e
+rough 0,2 / 0,45. Backup do material antigo em `plate_white_gloss_backup` (fake
+user — apagar quando aprovado). **Disco não leva texto** (decisão do usuário: nunca
+aparece); o frame `disco_texto` fica vazio.
 
 ### Geometria pendente
 
@@ -385,7 +397,7 @@ documento, **o arquivo é a verdade** — as seções acima descrevem a intenç�
 - `pcb` segue sem slot de material.
 - Render engine ainda é `BLENDER_EEVEE` (a decisão é Cycles para bake).
 - Câmera padrão em (7, −7, 5) mm, dentro do case — inútil.
-- Total: ~28k tris. UV só nos 4 parafusos.
+- Total: ~28k tris. UV nos 4 parafusos (original), `plate_top` e `base_bottom`.
 
 ---
 
