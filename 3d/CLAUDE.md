@@ -44,11 +44,14 @@ de um número da lista de estimativas sem avisar que ele é estimativa.**
 
 ### Grade de teclas
 
-Pitch de 18 mm nos dois eixos, centrada na origem.
+Pitch de 18 mm nos dois eixos. **A grade NÃO é centrada no pad:** o bloco de
+controles (12 keycaps, 12 switches, knob, encoder, roller) foi deslocado
+**+3,2948 mm em Y** pelo usuário. Placa, case, base e parafusos seguem centrados
+na origem. (Origem do valor — medida no aparelho ou ajuste visual — a confirmar.)
 
 ```
-colunas X:  c0 = -27   c1 = -9   c2 = +9   c3 = +27
-linhas  Y:  r0 = +27   r1 = +9   r2 = -9   r3 = -27
+colunas X:  c0 = -27       c1 = -9        c2 = +9       c3 = +27
+linhas  Y:  r0 = +30.295   r1 = +12.295   r2 = -5.705   r3 = -23.705
 ```
 
 Layout 4×4 menos os quatro cantos = 12 teclas. Os cantos são:
@@ -85,7 +88,7 @@ Altura total do apoio ao topo das teclas: **30,66 mm**. Inclinação do pad:
 
 ## 3. Inventário de objetos
 
-~17,4k tris no total. Nomes são contrato — o app vai endereçar as teclas por
+~28k tris no total (era ~17,4k antes da reconstrução do topo do keycap). Nomes são contrato — o app vai endereçar as teclas por
 eles.
 
 | objeto | mesh | tris | notas |
@@ -95,8 +98,8 @@ eles.
 | `pcb` | PcbMesh2 | 172 | 92×92×0,8, dá a linha âmbar de FR4 |
 | `base_bottom` | BaseBottomMesh4 | 636 | cunha Ø86, 3 slots de material |
 | `base_rubber` | BaseRubberMesh2 | 768 | anel Ø80/Ø66 × 1 |
-| `base_logo` | BaseLogoMesh3 | 606 | **ruim, refazer** |
-| `keycap_r0c1` … `keycap_r3c2` | KeycapMesh | 718 ×12 | mesh compartilhada |
+| `base_logo` | BaseLogoMesh2 | 492 | **ruim, refazer** |
+| `keycap_r0c1` … `keycap_r3c2` | KeycapMesh | 1566 ×12 | mesh compartilhada, topo refeito |
 | `switch_r0c1` … `switch_r3c2` | SwitchMesh | 228 ×12 | mesh compartilhada, 3 slots |
 | `knob` | KnobMesh | 254 | tem modifier BEVEL 0,3 |
 | `encoder` | EncoderMesh | 432 | 4 slots de material |
@@ -114,7 +117,19 @@ clique com translação em Z pura.
 
 Perfil: 17,5 mm quadrado, 6,5 de altura, raio de canto em planta 2,4, saída de
 molde 0,03/mm por lado, fillet superior 0,5, topo chato de 16,1 mm com abaulado
-central circular de Ø12,5 × 0,25 de profundidade (queda parabólica).
+central circular de Ø12,5 × 0,25 de profundidade.
+
+Topologia (refeita em 2026-09-14 — a original gerava um "X" de sombreamento):
+- 56 colunas. O contorno tinha 9 verts por canto e **zero nas retas**; foram
+  adicionados 5 loops verticais por reta, descendo a parede inteira.
+- Faixa plana quadrado→círculo: loop de suporte paralelo ao fillet a 0,15 mm,
+  anel intermediário, círculo. Correspondência por comprimento de arco (torção
+  máx. 2,9°) — normais da faixa ficam exatamente em +Z.
+- Abaulado: anéis concêntricos + fan central. O usuário adicionou loops em
+  r 6,05 / 6,16 e aprofundou o "ombro" perto da borda para marcar o círculo
+  como no real. Perfil atual (r → z): 6,25→6,500 · 4,69→6,407 · 3,13→6,328 ·
+  1,56→6,287 · 0→6,250. Ajuste visual, não medido.
+- Sharp só no pé (56 arestas, 92°). Só quads, exceto o fan central.
 
 **Switch** — Kailh Choc v1 simplificado, 3 slots: base preta 15 × 13,7 × 1,3,
 housing transparente 13,9 × 12,6 × 3,1, stem vermelho 10,8 × 4,6. Sem pinos,
@@ -282,7 +297,29 @@ material está em link `OBJECT`.
 
 ### Materiais
 
-Só existem `diffuse_color` de placeholder. Nada de node tree ainda.
+**Biblioteca base criada (2026-09-14)** — um material por substância real, só
+parâmetros no Principled (sem textura, exporta direto para glTF). Valores são
+ponto de partida, ajustar no render.
+
+| material | objetos | parâmetros |
+|---|---|---|
+| `keycap_black` | 12 keycaps (link `OBJECT`) | preto 0,025 · rough 0,45 |
+| `plastic_black` | knob, roller_base, switch base + stem | preto 0,025 · rough 0,5 |
+| `plastic_clear` | housing do switch | transmission 1 · rough 0,08 · IOR 1,49 |
+| `metal_roller` | roller_wheel, roller_bracket | metallic 1 · 0,78 · rough 0,3 |
+| `metal_black` | 4 parafusos | metallic 1 · 0,04 · rough 0,4 |
+| `plate_white_gloss` | plate_top | 0,85 · rough 0,2 |
+| `frame_frosted` | case_shell | transmission 1 · rough 0,55 · IOR 1,49 (acrílico) |
+| `foot_black` | base_bottom (3 slots), base_logo, base_rubber | 0,02 · rough 0,85 |
+
+Materiais físicos informados pelo usuário: keycap e knob plástico preto; roller
+de metal; switch plástico preto + transparente; parafusos metal preto; placa
+lisa branca brilhante; frame translúcido fosco (acrílico/policarbonato); pé
+plástico preto emborrachado. Teclas começam **todas pretas**; variantes
+coloridas previstas (roxo, verde claro, verde água, vermelho, rosa) = mesma
+receita, só muda a cor. Decals ficam para depois. Encoder e PCB mantêm os
+materiais antigos (escondidos). EEVEE com `use_raytracing` ligado e
+`thickness_mode = SLAB` nos transmissivos.
 
 Procedurais que dão para fazer sem depender de asset externo: grão de couro do
 disco (Voronoi + Noise em Bump, maior retorno visual do arquivo), borracha,
@@ -343,14 +380,12 @@ documento, **o arquivo é a verdade** — as seções acima descrevem a intenç�
 
 - `base_logo` está com `BaseLogoMesh2` (492 tris), não `BaseLogoMesh3` (606).
   Vai ser refeito de qualquer forma (seção 7).
-- Keycaps: o slot de material está em link **`DATA`** e vazio — **não** `OBJECT`
-  como descrito na seção 3. Precisa virar `OBJECT` antes de dar material por tecla,
-  senão um material pinta as 12.
-- `plate_top` e `pcb` não têm nenhum slot de material.
-- `case_shell` usa o `Material` genérico; parafusos usam `Material.002`.
+- ~~Keycaps em link `DATA` vazio~~ → **resolvido**: link `OBJECT` + `keycap_black`.
+- ~~`plate_top`/`case_shell`/parafusos sem material próprio~~ → **resolvido** (seção 7).
+- `pcb` segue sem slot de material.
 - Render engine ainda é `BLENDER_EEVEE` (a decisão é Cycles para bake).
 - Câmera padrão em (7, −7, 5) mm, dentro do case — inútil.
-- Total: 17.306 tris. UV só nos 4 parafusos.
+- Total: ~28k tris. UV só nos 4 parafusos.
 
 ---
 
