@@ -52,7 +52,11 @@ export function Keyboard3D({
       <Canvas
         frameloop="demand"
         dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping }}
+        shadows
+        gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping }}
+        onCreated={({ gl }) => {
+          gl.toneMappingExposure = 1.05;
+        }}
         camera={{ fov: 22, near: 1, far: 5000, position: [0, 400, 200] }}
       >
         <Suspense fallback={null}>
@@ -82,11 +86,18 @@ function Scene({ interactive }: { interactive: boolean }) {
 
   const caseMat = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({
-        color: "#eef1f6",
-        roughness: 0.55,
+      new THREE.MeshPhysicalMaterial({
+        // Difusor leitoso FALSO. O transmission de verdade do three borra a cena
+        // inteira atrás do case (passe screen-space) e come frame — fica para
+        // quando houver bake (3d/CLAUDE.md §6).
+        color: "#dbe4f4", // leve tom frio: é o que faz o acrílico ler sobre fundo claro
+        roughness: 0.45,
+        metalness: 0,
         transparent: true,
-        opacity: 0.78,
+        opacity: 0.72,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.25,
+        envMapIntensity: 1.4,
       }),
     [],
   );
@@ -110,6 +121,8 @@ function Scene({ interactive }: { interactive: boolean }) {
     root.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
       const mat = mesh.material as THREE.MeshStandardMaterial;
       if (mat.name === "frame_frosted") mesh.material = caseMat;
       else if (mat.name === "plastic_clear") mesh.material = clearMat;
@@ -158,13 +171,30 @@ function Scene({ interactive }: { interactive: boolean }) {
     <>
       <CameraRig pose={poseFor(interactive, selSlot)} />
 
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[-150, 300, 220]} intensity={2.2} />
-      <directionalLight position={[220, 160, -200]} intensity={0.5} />
-      <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={1.6} position={[0, 320, 0]} rotation-x={Math.PI / 2} scale={[500, 500, 1]} />
-        <Lightformer form="rect" intensity={1.2} position={[-320, 120, 260]} scale={[300, 200, 1]} target={[0, 0, 0]} />
-        <Lightformer form="rect" intensity={0.5} position={[320, 100, -260]} scale={[300, 200, 1]} target={[0, 0, 0]} />
+      <ambientLight intensity={0.05} />
+      {/* key light: grande, macia e de cima-esquerda — é ela que faz a sombra */}
+      <directionalLight
+        position={[-170, 280, 190]}
+        intensity={2.1}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0008}
+        shadow-radius={7}
+        shadow-camera-left={-140}
+        shadow-camera-right={140}
+        shadow-camera-top={140}
+        shadow-camera-bottom={-140}
+        shadow-camera-near={50}
+        shadow-camera-far={700}
+      />
+      <directionalLight position={[240, 130, -220]} intensity={0.35} />
+      {/* estúdio: softbox no teto + rebatedor à esquerda + recorte atrás.
+          O resto do ambiente fica escuro, e é esse contraste que desenha a
+          quina do case translúcido. */}
+      <Environment resolution={512} frames={1}>
+        <Lightformer form="rect" intensity={3.2} position={[-60, 320, 120]} rotation-x={Math.PI / 2} scale={[260, 200, 1]} />
+        <Lightformer form="rect" intensity={2.4} position={[-320, 160, 220]} scale={[200, 150, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={1.4} position={[300, 110, -260]} scale={[180, 110, 1]} target={[0, 0, 0]} />
       </Environment>
 
       <group rotation-x={PAD_TILT}>
@@ -208,9 +238,37 @@ function Scene({ interactive }: { interactive: boolean }) {
         )}
       </group>
 
-      <ContactShadows position={[0, FLOOR_Y, 0]} opacity={0.35} scale={240} blur={2.4} far={40} resolution={512} color="#0f172a" />
+      <mesh position={[0, FLOOR_Y, 0]} rotation-x={-Math.PI / 2} receiveShadow raycast={() => null}>
+        <planeGeometry args={[900, 900]} />
+        <shadowMaterial opacity={0.12} color="#0b1220" />
+      </mesh>
+      {/* NÃO combinar com <SoftShadows> (PCSS): juntos, o contato passa a
+          desenhar a cena inteira borrada por cima. O borrão da sombra
+          projetada vem de shadow-radius na luz. */}
+      <ContactShadows position={[0, FLOOR_Y + 0.2, 0]} opacity={0.5} scale={210} blur={2.6} far={36} resolution={512} color="#0f172a" />
     </>
   );
+}
+
+/**
+ * Plástico das peças clicáveis: o preto do .blend ganha um verniz sutil, que é
+ * o que dá o brilho macio do keycap no render (o glTF só carrega Principled
+ * básico). Metal (roda) fica como veio.
+ */
+function partMaterial(src: THREE.MeshStandardMaterial): THREE.MeshStandardMaterial {
+  if (src.metalness > 0.5) {
+    const metal = src.clone();
+    metal.envMapIntensity = 1.2;
+    return metal;
+  }
+  return new THREE.MeshPhysicalMaterial({
+    color: src.color.clone(),
+    roughness: 0.42,
+    metalness: 0,
+    clearcoat: 0.22,
+    clearcoatRoughness: 0.45,
+    envMapIntensity: 1.1,
+  });
 }
 
 /**
@@ -274,10 +332,7 @@ function Part({
   const invalidate = useThree((s) => s.invalidate);
 
   // material próprio por peça (a cor da tecla vai ser dirigida por JS — nunca assada)
-  const materials = useMemo(
-    () => meshes.map((m) => (m.material as THREE.Material).clone()),
-    [meshes],
-  );
+  const materials = useMemo(() => meshes.map((m) => partMaterial(m.material as THREE.MeshStandardMaterial)), [meshes]);
 
   // tinta emissiva: lê mesmo quando o contorno fica escondido atrás da vizinha
   useEffect(() => {
@@ -327,6 +382,8 @@ function Part({
           material={materials[i]}
           position={m.position}
           quaternion={m.quaternion}
+          castShadow
+          receiveShadow
         >
           {outline && <Outlines thickness={selected ? 0.7 : 0.35} color={outline} />}
         </mesh>

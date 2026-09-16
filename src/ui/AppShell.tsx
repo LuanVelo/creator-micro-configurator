@@ -28,6 +28,14 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
           {padView === "3d" ? (
             // 3D ocupa a área toda: a câmera é que enquadra (hero → edição → close)
             <div className="absolute inset-0">
+              {/* palco: leve gradiente para o case translúcido não sumir no branco */}
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(60% 55% at 50% 45%, #f4f6fa 0%, #eceff5 45%, #e6eaf2 100%)",
+                }}
+              />
               <Keyboard3D
                 interactive={connected}
                 fallback={<PadSvg connected={connected} />}
