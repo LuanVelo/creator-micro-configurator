@@ -28,3 +28,5 @@ npm-debug.log*
 
 # render intermediário do acervo cinematográfico
 3d/render/
+__pycache__/
+*.pyc
