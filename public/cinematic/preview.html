@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Acervo cinematográfico — preview</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0b0b0d; color: #e7e9ee;
+         font: 14px system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px 28px 60px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.sub { margin: 0 0 24px; color: #8b91a1; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em;
+       color: #8b91a1; margin: 32px 0 12px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; }
+  figure { margin: 0; background: #131418; border: 1px solid #23252c; border-radius: 12px; overflow: hidden; }
+  figure img, figure video { display: block; width: 100%; background: #000; }
+  figcaption { padding: 8px 12px; font-size: 12px; color: #aab0bd; display: flex;
+               justify-content: space-between; gap: 10px; }
+  figcaption b { color: #e7e9ee; font-weight: 600; }
+  .drawer { position: relative; }
+  .drawer::after { content: "drawer"; position: absolute; inset: 0 0 0 auto;
+    width: 46.4%; background: rgba(8,8,10,.72); border-left: 1px solid #ff2d55;
+    color: #ff2d55; font-size: 11px; padding: 6px 8px; box-sizing: border-box; }
+  label { color: #8b91a1; font-size: 12px; display: inline-flex; gap: 6px; align-items: center; }
+</style>
+</head>
+<body>
+<h1>Acervo do modo Cinematográfico</h1>
+<p class="sub">Renderizado do <code>.blend</code> por <code>3d/scripts/render_states.py</code>.
+  <label><input type="checkbox" id="mask"> mostrar onde o drawer cobre</label></p>
+
+<h2>Poses (imagem parada, 2880×1552)</h2>
+<div class="grid" id="poses"></div>
+
+<h2>Transições (vídeo, os dois sentidos)</h2>
+<div class="grid" id="clips"></div>
+
+<script>
+const kb = (n) => (n / 1024).toFixed(0) + " KB";
+fetch("manifest.json?" + Date.now()).then(r => r.json()).then(async (m) => {
+  const poses = document.getElementById("poses");
+  for (const p of m.poses) {
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<div class="shot${p.drawer === "open" ? " drawerable" : ""}">
+        <img src="${p.still.beauty}" loading="lazy"></div>
+      <figcaption><b>${p.id}</b><span>${p.drawer === "open" ? "drawer aberto" : "drawer fechado"}</span></figcaption>`;
+    poses.appendChild(fig);
+  }
+  const clips = document.getElementById("clips");
+  for (const c of m.clips) {
+    const fig = document.createElement("figure");
+    fig.innerHTML = `<video src="${c.file}" autoplay loop muted playsinline></video>
+      <figcaption><b>${c.from} → ${c.to}</b><span>${c.frames} frames · ${c.duration}s</span></figcaption>`;
+    clips.appendChild(fig);
+  }
+  document.getElementById("mask").addEventListener("change", (e) => {
+    for (const el of document.querySelectorAll(".drawerable"))
+      el.classList.toggle("drawer", e.target.checked);
+  });
+});
+</script>
+</body>
+</html>

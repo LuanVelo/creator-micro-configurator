@@ -1,6 +1,7 @@
 import { useApp, type PadView, type TransportKind } from "../store/app.ts";
 import { KeyboardRender } from "./KeyboardRender.tsx";
-import { Keyboard3D } from "./keyboard3d/Keyboard3D.tsx";
+import { CinematicPad } from "./cinematic/CinematicPad.tsx";
+import { DRAWER_W } from "./cinematic/stage.ts";
 import { RightPanel } from "./RightPanel.tsx";
 import { Header } from "./Header.tsx";
 import { Footer } from "./Footer.tsx";
@@ -19,27 +20,17 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
   const drawerOpen = connected && !panelCollapsed;
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-white text-slate-800">
+    <div className="relative flex h-full overflow-hidden bg-white text-slate-800">
       {/* coluna do teclado: header + pad + footer, contidos aqui */}
       <section className="flex min-w-0 flex-1 flex-col">
         <Header />
 
         <div className="relative flex min-h-0 flex-1 items-center justify-center px-8">
-          {padView === "3d" ? (
-            // 3D ocupa a área toda: a câmera é que enquadra (hero → edição → close)
+          {padView === "cinematic" ? (
+            // O palco NÃO encolhe quando o drawer abre: o enquadramento do
+            // render é fixo, então o painel desliza por cima.
             <div className="absolute inset-0">
-              {/* palco: leve gradiente para o case translúcido não sumir no branco */}
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(60% 55% at 50% 45%, #f4f6fa 0%, #eceff5 45%, #e6eaf2 100%)",
-                }}
-              />
-              <Keyboard3D
-                interactive={connected}
-                fallback={<PadSvg connected={connected} />}
-              />
+              <CinematicPad interactive={connected} fallback={<PadSvg connected={connected} />} />
             </div>
           ) : (
             <PadSvg connected={connected} />
@@ -67,7 +58,14 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
 
       {/* drawer: coluna própria de altura cheia à direita */}
       {drawerOpen && (
-        <aside className="w-[668px] shrink-0 border-l border-slate-100 bg-[var(--color-surface)]">
+        <aside
+          className={
+            padView === "cinematic"
+              ? "absolute right-0 top-0 z-20 h-full border-l border-slate-100 bg-[var(--color-surface)] shadow-2xl"
+              : "shrink-0 border-l border-slate-100 bg-[var(--color-surface)]"
+          }
+          style={{ width: DRAWER_W }}
+        >
           <RightPanel />
         </aside>
       )}
@@ -89,7 +87,7 @@ function PadSvg({ connected }: { connected: boolean }) {
       className="w-auto"
       style={{
         aspectRatio: "409 / 469",
-        height: "min(66vh, 540px)",
+        height: 540, // px: dentro do FixedFrame, vh se refere ao viewport
         transform: connected ? "translateY(0) scale(1)" : "translateY(-26px) scale(0.985)",
         filter: connected ? "none" : "grayscale(0.9) brightness(1.15) opacity(0.5)",
         transition: "transform 700ms cubic-bezier(0.22,0.8,0.24,1), filter 700ms ease-out",
@@ -105,7 +103,7 @@ function PadSvg({ connected }: { connected: boolean }) {
 function PadViewToggle({ value, onChange }: { value: PadView; onChange: (v: PadView) => void }) {
   return (
     <div className="absolute right-8 top-2 z-10 inline-flex rounded-full bg-slate-100 p-0.5 text-xs">
-      {(["2d", "3d"] as const).map((v) => (
+      {(["fast", "cinematic"] as const).map((v) => (
         <button
           key={v}
           onClick={() => onChange(v)}
@@ -113,7 +111,7 @@ function PadViewToggle({ value, onChange }: { value: PadView; onChange: (v: PadV
             value === v ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          {v}
+          {v === "fast" ? "fast" : "cine"}
         </button>
       ))}
     </div>

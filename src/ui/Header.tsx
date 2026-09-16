@@ -13,7 +13,7 @@ export function Header() {
   const tabsActive = drawerOpen && selectedSlot === null;
 
   return (
-    <header className="flex shrink-0 items-center justify-between px-8 py-4">
+    <header className="flex h-16 shrink-0 items-center justify-between px-8">
       <span className="text-2xl font-extrabold lowercase tracking-tight text-[var(--color-accent)]">
         keymap
       </span>

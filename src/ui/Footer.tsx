@@ -8,7 +8,7 @@ import { LayerSelector } from "./LayerSelector.tsx";
  */
 export function Footer() {
   return (
-    <footer className="flex shrink-0 items-center border-t border-[var(--color-line)] px-6 py-3">
+    <footer className="flex h-[60px] shrink-0 items-center border-t border-[var(--color-line)] px-6">
       <div className="flex flex-1 justify-start">
         <ConnectionStatus />
       </div>

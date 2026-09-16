@@ -25,3 +25,6 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+
+# render intermediário do acervo cinematográfico
+3d/render/

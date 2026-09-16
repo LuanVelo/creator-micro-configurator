@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppShell } from "./ui/AppShell.tsx";
+import { FixedFrame } from "./ui/FixedFrame.tsx";
 import { DiscoveryPanel } from "./features/discovery/DiscoveryPanel.tsx";
 
 type View = "configurator" | "discovery";
@@ -23,5 +24,9 @@ export function App() {
     );
   }
 
-  return <AppShell onOpenDiscovery={() => setView("discovery")} />;
+  return (
+    <FixedFrame>
+      <AppShell onOpenDiscovery={() => setView("discovery")} />
+    </FixedFrame>
+  );
 }

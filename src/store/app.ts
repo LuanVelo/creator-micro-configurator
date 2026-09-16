@@ -27,8 +27,11 @@ const seed = importViaJson(backupJson, { id: "figma-design", name: "Figma Design
 export type SidePanelTab = "presets" | "actions";
 export type ConnectionState = "disconnected" | "connecting" | "connected";
 export type TransportKind = "webhid" | "mock";
-/** Render do pad: SVG do Figma (v1) ou modelo 3D (v2). Os dois convivem pra comparar. */
-export type PadView = "2d" | "3d";
+/**
+ * Modo do pad: "fast" = SVG do Figma (ferramenta do dia a dia); "cinematic" =
+ * imagem pré-renderizada do Blender (vitrine). Ver docs/cinematic-instrucoes.md.
+ */
+export type PadView = "fast" | "cinematic";
 
 // Singletons não-reativos do transporte. `writeArmed` só fica true durante um
 // upload explícito — fora disso o GuardedTransport mantém tudo read-only (§8.4).
@@ -104,7 +107,7 @@ export const useApp = create<AppState>()(
       selectedSlot: null,
       panelTab: "presets",
       panelCollapsed: true, // drawer fechado por padrão (idle conectado = 56:2700)
-      padView: "3d",
+      padView: "cinematic",
 
       connection: "disconnected",
       deviceName: null,
@@ -245,10 +248,24 @@ export const useApp = create<AppState>()(
     }),
     {
       name: "keymap-store",
-      version: 1,
+      version: 2,
+      // v1 chamava os modos de "2d"/"3d"; localStorage é dado externo, então
+      // qualquer valor desconhecido cai para o modo que sempre funciona.
+      migrate: (persisted, from) => {
+        const s = persisted as { padView?: string };
+        if (from < 2) {
+          return { ...s, padView: s?.padView === "3d" ? "cinematic" : "fast" };
+        }
+        return s;
+      },
       storage: createJSONStorage(() => localStorage),
       // biblioteca + preferência de render do pad; estado efêmero de UI não.
       partialize: (s) => ({ presets: s.presets, activePresetId: s.activePresetId, padView: s.padView }),
+      merge: (persisted, current) => {
+        const s = { ...current, ...(persisted as object) } as AppState;
+        if (s.padView !== "fast" && s.padView !== "cinematic") s.padView = "fast";
+        return s;
+      },
     },
   ),
 );
