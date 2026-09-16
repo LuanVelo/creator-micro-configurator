@@ -75,7 +75,7 @@ function PresetList() {
         <button
           onClick={() => setRenamingId(createPresetFromCurrent())}
           title="Novo preset (cópia do estado atual)"
-          className="grid h-8 w-8 place-items-center rounded-full border border-slate-300 text-lg leading-none text-slate-400 transition hover:bg-white hover:text-slate-600"
+          className="grid h-8 w-8 place-items-center rounded-full border border-[var(--color-line)] text-lg leading-none text-[var(--color-ink-soft)] transition hover:bg-[var(--color-chip-hover)] hover:text-[var(--color-ink)]"
         >
           +
         </button>
@@ -119,17 +119,17 @@ function PresetRow({
             onSelect();
           }
         }}
-        className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left transition ${
-          active ? "border-slate-300 shadow-sm" : "border-slate-200 hover:border-slate-300"
+        className={`flex items-center gap-3 rounded-xl border bg-[var(--color-card)] px-4 py-3 text-left transition ${
+          active ? "border-[var(--color-line-strong)] shadow-sm" : "border-[var(--color-line)] hover:border-[var(--color-line-strong)]"
         }`}
       >
         <FigmaLogo className="h-5 w-auto shrink-0" />
         <span className="min-w-0 flex-1 leading-tight">
-          <span className="block text-[11px] text-slate-400">Preset custom</span>
+          <span className="block text-[11px] text-[var(--color-ink-soft)]">Preset custom</span>
           {renaming ? (
             <RenameInput initial={preset.name} onCommit={onCommitRename} onCancel={onCancelRename} />
           ) : (
-            <span className="block truncate text-sm font-semibold text-slate-700">{preset.name}</span>
+            <span className="block truncate text-sm font-semibold text-[var(--color-ink)]">{preset.name}</span>
           )}
         </span>
 
@@ -178,7 +178,7 @@ function RenameInput({
         if (e.key === "Escape") onCancel();
       }}
       onBlur={() => onCommit(value)}
-      className="mt-0.5 block w-full rounded border border-slate-300 px-1.5 py-0.5 text-sm font-semibold text-slate-700 outline-none focus:border-[var(--color-accent)]"
+      className="mt-0.5 block w-full rounded border border-[var(--color-line)] px-1.5 py-0.5 text-sm font-semibold text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
       spellCheck={false}
     />
   );
@@ -205,8 +205,8 @@ function IconBtn({
         e.stopPropagation();
         onClick();
       }}
-      className={`grid h-7 w-7 place-items-center rounded-md text-slate-400 transition disabled:opacity-30 ${
-        danger ? "hover:bg-red-50 hover:text-red-500" : "hover:bg-slate-100 hover:text-slate-600"
+      className={`grid h-7 w-7 place-items-center rounded-md text-[var(--color-ink-soft)] transition disabled:opacity-30 ${
+        danger ? "hover:bg-red-500/15 hover:text-red-400" : "hover:bg-[var(--color-chip)] hover:text-[var(--color-ink)]"
       }`}
     >
       {children}
@@ -246,14 +246,14 @@ function ActionsList() {
   return (
     <ul className="space-y-2 py-1">
       {macros.map((m) => (
-        <li key={m.index} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-          <span className="mr-2 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-500">
+        <li key={m.index} className="rounded-xl border border-[var(--color-line)] bg-[var(--color-card)] px-4 py-3">
+          <span className="mr-2 rounded bg-[var(--color-chip)] px-1.5 py-0.5 font-mono text-xs text-[var(--color-ink-soft)]">
             M{m.index}
           </span>
-          <span className="font-mono text-xs text-slate-600">{m.actions}</span>
+          <span className="font-mono text-xs text-[var(--color-ink)]">{m.actions}</span>
         </li>
       ))}
-      {macros.length === 0 && <li className="px-2 text-sm text-slate-400">Nenhuma macro definida.</li>}
+      {macros.length === 0 && <li className="px-2 text-sm text-[var(--color-ink-soft)]">Nenhuma macro definida.</li>}
     </ul>
   );
 }

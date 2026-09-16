@@ -25,8 +25,8 @@ export function Footer() {
 function ConnectionStatus() {
   const connection = useApp((s) => s.connection);
   const map = {
-    disconnected: { dot: "bg-slate-300", text: "text-slate-400", label: "Não conectado" },
-    connecting: { dot: "bg-amber-400 animate-pulse", text: "text-amber-600", label: "Conectando…" },
+    disconnected: { dot: "bg-[var(--color-ink-soft)]", text: "text-[var(--color-ink-soft)]", label: "Não conectado" },
+    connecting: { dot: "bg-amber-400 animate-pulse", text: "text-amber-400", label: "Conectando…" },
     connected: { dot: "bg-[var(--color-accent)]", text: "text-[var(--color-accent)]", label: "Conectado" },
   }[connection];
   return (
@@ -64,8 +64,8 @@ function UploadButton() {
       }
       className={`inline-flex items-center gap-2 rounded-[var(--radius-pill)] px-5 py-2 text-sm font-semibold transition ${
         enabled
-          ? "bg-slate-900 text-white shadow-sm hover:bg-slate-700"
-          : "cursor-not-allowed bg-slate-100 text-slate-400"
+          ? "bg-[var(--color-btn)] text-[var(--color-btn-ink)] shadow-sm hover:bg-[var(--color-btn-hover)]"
+          : "cursor-not-allowed bg-[var(--color-chip)] text-[var(--color-ink-soft)]"
       }`}
     >
       {uploading ? "enviando…" : "fazer upload"}

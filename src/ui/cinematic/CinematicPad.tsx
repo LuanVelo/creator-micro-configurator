@@ -246,7 +246,7 @@ function Tooltip({ anchor, kc }: { anchor: SlotAnchor; kc: string }) {
   const text = label ? `${label} · ${kc}` : kc;
   return (
     <div
-      className="pointer-events-none absolute z-20 whitespace-nowrap rounded-md bg-slate-900/90 px-2 py-1 text-[11px] font-medium text-slate-50 shadow-lg ring-1 ring-white/10"
+      className="pointer-events-none absolute z-20 whitespace-nowrap rounded-md bg-black/85 px-2 py-1 text-[11px] font-medium text-[var(--color-ink)] shadow-lg ring-1 ring-white/10"
       style={{
         left: `${anchor.tip[0] * 100}%`,
         top: `${anchor.tip[1] * 100}%`,

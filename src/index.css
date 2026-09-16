@@ -1,20 +1,31 @@
 @import "tailwindcss";
 
-/* Tokens do design (Figma): app claro, glassy, acento verde.
- * Semânticos primeiro (superfícies/raios) para plugar o design system depois:
- * quando os variables do Figma chegarem, remapeia-se aqui e a UI acompanha. */
+/* Tokens do design: app ESCURO (os mockups do modo cinematográfico), acento
+ * verde. Semânticos primeiro (superfícies/raios) para plugar o design system
+ * depois: quando os variables do Figma chegarem, remapeia-se aqui e a UI
+ * acompanha. Nenhum componente deve ter cor fixa — se precisar de uma nova,
+ * nasce token aqui. */
 @theme {
   --color-accent: #22c55e;
   --color-accent-soft: #86efac;
-  --color-key-selected: #3b82f6;
+  --color-key-selected: #ff9f0a; /* laranja da seleção, dos mockups */
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* superfícies */
-  --color-surface: #fafafa; /* fundo do drawer */
-  --color-card: #ffffff; /* cards internos */
-  --color-line: #eceef1; /* divisórias/bordas suaves */
-  --color-ink: #334155; /* texto principal (slate-700) */
-  --color-ink-soft: #94a3b8; /* texto secundário (slate-400) */
+  --color-bg: #0b0b0d; /* fundo do app (mesmo preto do palco renderizado) */
+  --color-surface: #141418; /* fundo do drawer */
+  --color-card: #1b1c21; /* cards internos */
+  --color-line: #2a2b33; /* divisórias/bordas suaves */
+  --color-line-strong: #3a3c46; /* borda em hover/foco */
+  --color-ink: #e8eaef; /* texto principal */
+  --color-ink-soft: #8b91a1; /* texto secundário */
+
+  /* controles: no escuro o botão primário é claro, não escuro */
+  --color-btn: #eceef3;
+  --color-btn-ink: #0b0b0d;
+  --color-btn-hover: #ffffff;
+  --color-chip: rgba(255, 255, 255, 0.06); /* trilho de segmento, pill inativa */
+  --color-chip-hover: rgba(255, 255, 255, 0.12);
 
   /* raios */
   --radius-card: 16px;
@@ -32,6 +43,9 @@ body,
 
 body {
   margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  color-scheme: dark;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }

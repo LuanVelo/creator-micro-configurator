@@ -457,7 +457,7 @@ function Tooltip({ position, kc }: { position: [number, number, number]; kc: str
   const text = label ? `${label} · ${kc}` : kc;
   return (
     <Html position={position} center zIndexRange={[30, 0]} style={{ pointerEvents: "none" }}>
-      <div className="whitespace-nowrap rounded-md bg-slate-900/90 px-2 py-1 text-[11px] font-medium text-slate-50 shadow">
+      <div className="whitespace-nowrap rounded-md bg-black/85 px-2 py-1 text-[11px] font-medium text-[var(--color-ink)] shadow ring-1 ring-white/10">
         {text}
       </div>
     </Html>

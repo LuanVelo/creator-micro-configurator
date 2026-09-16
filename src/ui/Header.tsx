@@ -19,7 +19,7 @@ export function Header() {
       </span>
 
       <div className="flex items-center gap-2">
-        <div className="inline-flex rounded-full bg-slate-100 p-0.5 text-sm">
+        <div className="inline-flex rounded-full bg-[var(--color-chip)] p-0.5 text-sm">
           <Tab tab="presets" active={tabsActive && panelTab === "presets"} disabled={!connected}
             onClick={() => (tabsActive && panelTab === "presets" ? toggleCollapsed() : showPanelTab("presets"))}>
             Presets
@@ -35,7 +35,7 @@ export function Header() {
           disabled={!connected}
           title={panelCollapsed ? "Abrir painel" : "Recolher painel"}
           className={`grid h-7 w-7 place-items-center rounded-full shadow-sm transition disabled:opacity-30 ${
-            drawerOpen ? "bg-slate-900 text-white hover:bg-slate-700" : "bg-slate-200 text-slate-500 hover:bg-slate-300"
+            drawerOpen ? "bg-[var(--color-btn)] text-[var(--color-btn-ink)] hover:bg-[var(--color-btn-hover)]" : "bg-[var(--color-chip)] text-[var(--color-ink-soft)] hover:bg-[var(--color-chip-hover)]"
           }`}
         >
           <span className={`text-sm transition-transform ${drawerOpen ? "rotate-180" : ""}`}>›</span>
@@ -62,7 +62,7 @@ function Tab({
       onClick={onClick}
       disabled={disabled}
       className={`rounded-full px-5 py-1 font-medium transition disabled:opacity-40 ${
-        active ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+        active ? "bg-[var(--color-btn)] text-[var(--color-btn-ink)] shadow-sm" : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
       }`}
     >
       {children}

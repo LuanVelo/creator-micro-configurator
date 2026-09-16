@@ -11,7 +11,7 @@ export function LayerSelector() {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm text-slate-400">Presets</span>
+      <span className="text-sm text-[var(--color-ink-soft)]">Presets</span>
       <div className="flex gap-1.5">
         {layers.map((i) => {
           const active = i === activeLayer;
@@ -22,8 +22,8 @@ export function LayerSelector() {
               onClick={() => setActiveLayer(i)}
               className={`h-[26px] w-[26px] rounded-md text-sm font-medium transition ${
                 active
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                  ? "bg-[var(--color-btn)] text-[var(--color-btn-ink)] shadow-sm"
+                  : "bg-[var(--color-chip)] text-[var(--color-ink-soft)] hover:bg-[var(--color-chip-hover)]"
               }`}
             >
               {i + 1}

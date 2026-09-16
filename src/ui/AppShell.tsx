@@ -20,7 +20,7 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
   const drawerOpen = connected && !panelCollapsed;
 
   return (
-    <div className="relative flex h-full overflow-hidden bg-white text-slate-800">
+    <div className="relative flex h-full overflow-hidden bg-[var(--color-card)] text-[var(--color-ink)]">
       {/* coluna do teclado: header + pad + footer, contidos aqui */}
       <section className="flex min-w-0 flex-1 flex-col">
         <Header />
@@ -61,8 +61,8 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
         <aside
           className={
             padView === "cinematic"
-              ? "absolute right-0 top-0 z-20 h-full border-l border-slate-100 bg-[var(--color-surface)] shadow-2xl"
-              : "shrink-0 border-l border-slate-100 bg-[var(--color-surface)]"
+              ? "absolute right-0 top-0 z-20 h-full border-l border-[var(--color-line)] bg-[var(--color-surface)] shadow-2xl"
+              : "shrink-0 border-l border-[var(--color-line)] bg-[var(--color-surface)]"
           }
           style={{ width: DRAWER_W }}
         >
@@ -72,7 +72,7 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
 
       <button
         onClick={onOpenDiscovery}
-        className="absolute bottom-2 left-4 text-[11px] text-slate-300 transition hover:text-slate-500"
+        className="absolute bottom-2 left-4 text-[11px] text-[var(--color-ink-soft)] transition hover:text-[var(--color-ink)]"
       >
         Fase 0 · Discovery
       </button>
@@ -102,13 +102,13 @@ function PadSvg({ connected }: { connected: boolean }) {
 /** Alterna SVG ↔ 3D pra comparar as duas versões (preferência persistida). */
 function PadViewToggle({ value, onChange }: { value: PadView; onChange: (v: PadView) => void }) {
   return (
-    <div className="absolute right-8 top-2 z-10 inline-flex rounded-full bg-slate-100 p-0.5 text-xs">
+    <div className="absolute right-8 top-2 z-10 inline-flex rounded-full bg-[var(--color-chip)] p-0.5 text-xs">
       {(["fast", "cinematic"] as const).map((v) => (
         <button
           key={v}
           onClick={() => onChange(v)}
           className={`rounded-full px-3 py-1 font-semibold uppercase transition ${
-            value === v ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"
+            value === v ? "bg-[var(--color-btn)] text-[var(--color-btn-ink)] shadow-sm" : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
           }`}
         >
           {v === "fast" ? "fast" : "cine"}
@@ -132,14 +132,14 @@ function ConnectControls({
       <button
         disabled={connecting}
         onClick={() => onConnect("webhid")}
-        className="rounded-[var(--radius-pill)] bg-slate-900 px-8 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-700 disabled:opacity-60"
+        className="rounded-[var(--radius-pill)] bg-[var(--color-btn)] px-8 py-2.5 text-sm font-semibold text-[var(--color-btn-ink)] shadow-md transition hover:bg-[var(--color-btn-hover)] disabled:opacity-60"
       >
         {connecting ? "Conectando…" : "Conectar device"}
       </button>
       <button
         disabled={connecting}
         onClick={() => onConnect("mock")}
-        className="text-xs text-slate-400 underline-offset-2 transition hover:text-slate-600 hover:underline disabled:opacity-60"
+        className="text-xs text-[var(--color-ink-soft)] underline-offset-2 transition hover:text-[var(--color-ink)] hover:underline disabled:opacity-60"
       >
         ou simular (mock)
       </button>

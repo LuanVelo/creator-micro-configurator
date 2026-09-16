@@ -50,7 +50,7 @@ export function ActionPicker({
                   <AppIcon icon={g.icon} size={29} selected={active} dimmed={!active} />
                 </button>
                 {/* tooltip: nome do app no hover */}
-                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
+                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-btn)] px-2 py-1 text-[11px] font-medium text-[var(--color-btn-ink)] opacity-0 shadow-md transition group-hover:opacity-100">
                   {g.app}
                 </span>
               </div>
@@ -100,7 +100,7 @@ function ActionRow({
       onClick={onClick}
       className={`flex w-full items-center justify-between gap-3 border-b border-[var(--color-line)] px-2 py-2.5 text-left text-sm transition last:border-b-0 ${
         selected
-          ? "rounded-lg bg-emerald-50 text-[var(--color-ink)]"
+          ? "rounded-lg bg-[var(--color-accent)]/12 text-[var(--color-ink)]"
           : "text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
       }`}
     >

@@ -67,7 +67,7 @@ function SlotEditor({ slotIndex }: { slotIndex: number }) {
         <button
           onClick={() => selectSlot(null)}
           title="Fechar"
-          className="absolute right-4 top-3 z-10 grid h-7 w-7 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-slate-100 hover:text-[var(--color-ink)]"
+          className="absolute right-4 top-3 z-10 grid h-7 w-7 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-[var(--color-chip)] hover:text-[var(--color-ink)]"
         >
           ✕
         </button>
@@ -113,7 +113,7 @@ function SlotEditor({ slotIndex }: { slotIndex: number }) {
         <button
           onClick={save}
           disabled={!dirty || !allValid}
-          className="rounded-[var(--radius-pill)] bg-slate-900 px-8 py-2 text-sm font-semibold text-white shadow-sm transition enabled:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[var(--radius-pill)] bg-[var(--color-btn)] px-8 py-2 text-sm font-semibold text-[var(--color-btn-ink)] shadow-sm transition enabled:hover:bg-[var(--color-btn-hover)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Salvar
         </button>
@@ -140,7 +140,7 @@ function TargetTab({
     <button
       onClick={() => setTarget(tab)}
       className={`rounded-md px-2.5 py-1 font-medium transition ${
-        active ? "bg-white text-[var(--color-ink)] shadow-sm" : "text-[var(--color-ink-soft)]"
+        active ? "bg-[var(--color-card)] text-[var(--color-ink)] shadow-sm" : "text-[var(--color-ink-soft)]"
       }`}
     >
       {children}
@@ -173,7 +173,7 @@ function CodePill({ value, onChange }: { value: string; onChange: (kc: string) =
           if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur();
         }}
         className={`w-[150px] rounded-[var(--radius-pill)] border px-4 py-2 text-right font-mono text-sm outline-none ${
-          valid ? "border-[var(--color-accent)]" : "border-red-400 bg-red-50"
+          valid ? "border-[var(--color-accent)]" : "border-red-400 bg-red-500/12"
         }`}
         spellCheck={false}
       />
@@ -187,7 +187,7 @@ function CodePill({ value, onChange }: { value: string; onChange: (kc: string) =
         setEditing(true);
       }}
       title="Clique para digitar o keycode"
-      className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-card)] px-4 py-2 transition hover:border-slate-300"
+      className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-card)] px-4 py-2 transition hover:border-[var(--color-line-strong)]"
     >
       <span className="text-sm font-semibold text-[var(--color-ink)]">{label}</span>
       <span className="font-mono text-xs text-[var(--color-ink-soft)]">({value})</span>
