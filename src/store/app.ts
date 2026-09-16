@@ -248,15 +248,14 @@ export const useApp = create<AppState>()(
     }),
     {
       name: "keymap-store",
-      version: 2,
-      // v1 chamava os modos de "2d"/"3d"; localStorage é dado externo, então
-      // qualquer valor desconhecido cai para o modo que sempre funciona.
+      version: 3,
+      // v1 chamava os modos de "2d"/"3d" e queriam dizer outra coisa: quem
+      // escolheu "2d" lá não estava recusando o modo cinematográfico, que nem
+      // existia. Então todo mundo que vem da v1 entra no cine e troca no toggle
+      // se quiser. (Depois disso, a escolha do usuário é respeitada.)
       migrate: (persisted, from) => {
         const s = persisted as { padView?: string };
-        if (from < 2) {
-          return { ...s, padView: s?.padView === "3d" ? "cinematic" : "fast" };
-        }
-        return s;
+        return from < 3 ? { ...s, padView: "cinematic" } : s;
       },
       storage: createJSONStorage(() => localStorage),
       // biblioteca + preferência de render do pad; estado efêmero de UI não.
