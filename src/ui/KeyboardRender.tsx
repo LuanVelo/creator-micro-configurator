@@ -1,7 +1,8 @@
 import type React from "react";
+import { useState } from "react";
 import { useApp, selectActivePreset } from "../store/app.ts";
 import { SLOT_LAYOUT, type Slot } from "../model/layout.ts";
-import { keyLabel } from "./labels.ts";
+import { actionLabelFor, keyLabel } from "./labels.ts";
 import rawSvg from "../assets/keyboard49.svg?raw";
 
 /**
@@ -41,10 +42,11 @@ function center(slot: Slot): { cx: number; cy: number } {
   return { cx: COLX[slot.col], cy: ROWY[slot.row] };
 }
 
-export function KeyboardRender() {
-  const { activeLayer, selectedSlot, selectSlot } = useApp();
+export function KeyboardRender({ interactive = true }: { interactive?: boolean }) {
+  const { activeLayer, selectedSlot, selectSlot, panelCollapsed } = useApp();
   const preset = useApp(selectActivePreset);
   const keys = preset.layers[activeLayer]?.keys ?? [];
+  const [hovered, setHovered] = useState<number | null>(null);
 
   return (
     <svg
@@ -57,22 +59,29 @@ export function KeyboardRender() {
       {/* arte exata do Figma (vetor, gradientes preservados) */}
       <image href={ART_URI} x="0" y="0" width={ART_W} height={ART_H} />
 
-
-      {/* camada interativa */}
-      {SLOT_LAYOUT.map((slot) => {
+      {/* camada interativa — só quando há device conectado */}
+      {interactive &&
+        SLOT_LAYOUT.map((slot) => {
         const { cx, cy } = center(slot);
         const kc = keys[slot.index] ?? "KC_NO";
         const selected = selectedSlot === slot.index;
         const clickable = slot.role !== "logo";
         const isKey = slot.role === "key";
 
+        // drawer fechado → sempre abre nessa tecla; aberto → alterna (clicar a
+        // selecionada desmarca). "sempre deve abrir" ao clicar com o drawer fechado.
+        const toggle = () =>
+          selectSlot(panelCollapsed ? slot.index : selected ? null : slot.index);
+
         const handlers = clickable
           ? {
-              onClick: () => selectSlot(selected ? null : slot.index),
+              onClick: toggle,
+              onMouseEnter: () => setHovered(slot.index),
+              onMouseLeave: () => setHovered((h) => (h === slot.index ? null : h)),
               onKeyDown: (e: React.KeyboardEvent) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  selectSlot(selected ? null : slot.index);
+                  toggle();
                 }
               },
               role: "button",
@@ -86,7 +95,7 @@ export function KeyboardRender() {
         const h = slot.role === "wheel" ? 42 : KH;
         return (
           <g key={slot.index} {...handlers}>
-            <rect x={cx - w / 2} y={cy - h / 2} width={w} height={h} rx="8" fill="transparent" />
+            <rect x={cx - w / 2} y={cy - h / 2} width={w} height={h} rx="10" fill="transparent" />
             {isKey && (
               <text
                 x={cx}
@@ -100,13 +109,14 @@ export function KeyboardRender() {
                 {keyLabel(kc)}
               </text>
             )}
+            {/* seleção = variante "square selected" do Figma (box azul no keycap) */}
             {selected && (
               <rect
-                x={cx - w / 2 - 1.5}
-                y={cy - h / 2 - 1.5}
-                width={w + 3}
-                height={h + 3}
-                rx="7"
+                x={cx - w / 2}
+                y={cy - h / 2}
+                width={w}
+                height={h}
+                rx="10"
                 fill="none"
                 stroke="var(--color-key-selected)"
                 strokeWidth="2.5"
@@ -116,6 +126,36 @@ export function KeyboardRender() {
           </g>
         );
       })}
+
+      {/* tooltip do hover (por cima de tudo) */}
+      {hovered !== null && <KeyTooltip slotIndex={hovered} kc={keys[hovered] ?? "KC_NO"} />}
     </svg>
+  );
+}
+
+/** Tooltip SVG: código + atalho, acima do keycap (abaixo, se for a fileira de cima). */
+function KeyTooltip({ slotIndex, kc }: { slotIndex: number; kc: string }) {
+  const slot = SLOT_LAYOUT[slotIndex];
+  const { cx, cy } = center(slot);
+  const label = actionLabelFor(kc) ?? keyLabel(kc);
+  const text = label ? `${label} · ${kc}` : kc;
+
+  const fs = 11;
+  const padX = 8;
+  const width = Math.max(44, text.length * fs * 0.56 + padX * 2);
+  const height = 22;
+  const gap = 34;
+  const below = slot.row === 0; // fileira de cima: tooltip abaixo para não cortar
+  const y = below ? cy + gap - height / 2 : cy - gap - height / 2;
+  const x = Math.min(Math.max(cx - width / 2, 4), ART_W - width - 4);
+  const ty = y + height / 2 + fs * 0.35;
+
+  return (
+    <g className="pointer-events-none">
+      <rect x={x} y={y} width={width} height={height} rx="6" fill="#0f172a" opacity="0.92" />
+      <text x={x + width / 2} y={ty} textAnchor="middle" fontSize={fs} fontWeight="500" fill="#f8fafc">
+        {text}
+      </text>
+    </g>
   );
 }

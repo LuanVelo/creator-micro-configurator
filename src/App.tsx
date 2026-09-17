@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppShell } from "./ui/AppShell.tsx";
+import { FixedFrame } from "./ui/FixedFrame.tsx";
 import { DiscoveryPanel } from "./features/discovery/DiscoveryPanel.tsx";
 
 type View = "configurator" | "discovery";
@@ -10,10 +11,10 @@ export function App() {
   if (view === "discovery") {
     return (
       <div>
-        <div className="bg-slate-100 px-6 pt-4">
+        <div className="bg-[var(--color-chip)] px-6 pt-4">
           <button
             onClick={() => setView("configurator")}
-            className="text-sm text-slate-500 underline-offset-2 hover:underline"
+            className="text-sm text-[var(--color-ink-soft)] underline-offset-2 hover:underline"
           >
             ← Voltar ao configurador
           </button>
@@ -23,5 +24,9 @@ export function App() {
     );
   }
 
-  return <AppShell onOpenDiscovery={() => setView("discovery")} />;
+  return (
+    <FixedFrame>
+      <AppShell onOpenDiscovery={() => setView("discovery")} />
+    </FixedFrame>
+  );
 }

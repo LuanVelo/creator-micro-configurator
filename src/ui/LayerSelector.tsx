@@ -2,7 +2,7 @@ import { useApp } from "../store/app.ts";
 import { CREATOR_MICRO } from "../protocol/device.ts";
 
 /**
- * Chips 1–4 no rodapé central (Figma node 48:348). Rótulo "Presets" conforme o
+ * Chips 1–4 no rodapé central (Figma node 75:890). Rótulo "Presets" conforme o
  * design; funcionalmente selecionam a layer de hardware ativa (0–3).
  */
 export function LayerSelector() {
@@ -10,9 +10,9 @@ export function LayerSelector() {
   const layers = Array.from({ length: CREATOR_MICRO.layerCount }, (_, i) => i);
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-slate-400">Presets</span>
-      <div className="flex gap-1.5">
+    <div className="flex items-center gap-[11px]">
+      <span className="text-[10px] text-white">Presets</span>
+      <div className="flex gap-0.5">
         {layers.map((i) => {
           const active = i === activeLayer;
           return (
@@ -20,10 +20,11 @@ export function LayerSelector() {
               key={i}
               type="button"
               onClick={() => setActiveLayer(i)}
-              className={`h-[26px] w-[26px] rounded-md text-sm font-medium transition ${
+              aria-pressed={active}
+              className={`h-[19px] w-[28px] rounded-[4px] text-xs leading-none transition ${
                 active
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                  ? "bg-[var(--color-layer-on)] text-[var(--color-layer-on-ink)]"
+                  : "bg-[var(--color-layer-off)] text-[var(--color-ink-faint)] hover:brightness-110"
               }`}
             >
               {i + 1}

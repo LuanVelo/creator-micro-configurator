@@ -5,6 +5,8 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages serve em /<repo>/; o workflow passa BASE_PATH. Local fica na raiz.
+  base: process.env.BASE_PATH ?? "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

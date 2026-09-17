@@ -56,18 +56,18 @@ export function DiscoveryPanel() {
   const connectMock = useCallback(() => run(() => new MockTransport(backupPreset)), [run]);
 
   return (
-    <div className="mx-auto max-w-5xl p-6 text-slate-800">
+    <div className="mx-auto max-w-5xl p-6 text-[var(--color-ink)]">
       <header className="mb-6">
         <h1 className="text-2xl font-bold">
           <span className="text-[var(--color-accent)]">keymap</span> — Fase 0 · Discovery
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
           Leitura read-only do Creator Micro e diff contra o backup do VIA. Nenhuma escrita.
         </p>
       </header>
 
       {!isWebHidSupported() && (
-        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-400/12 p-3 text-sm text-amber-300">
           WebHID não está disponível neste navegador. Use <b>Chrome</b> ou <b>Edge</b> para conectar
           o teclado. Você ainda pode usar o modo simulado abaixo.
         </div>
@@ -84,15 +84,15 @@ export function DiscoveryPanel() {
         <button
           onClick={connectMock}
           disabled={status === "connecting"}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40"
+          className="rounded-lg border border-[var(--color-line)] bg-[var(--color-card)] px-4 py-2 font-medium text-[var(--color-ink)] shadow-sm transition hover:bg-[var(--color-chip)] disabled:opacity-40"
         >
           Simular com backup (mock)
         </button>
-        {status === "connecting" && <span className="self-center text-sm text-slate-500">Lendo…</span>}
+        {status === "connecting" && <span className="self-center text-sm text-[var(--color-ink-soft)]">Lendo…</span>}
       </div>
 
       {status === "error" && (
-        <div className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/12 p-3 text-sm text-red-300">
           {error}
         </div>
       )}
@@ -117,8 +117,8 @@ function DumpView({ dump, rec }: Result) {
       <section
         className={`rounded-lg border p-3 text-sm ${
           rec.keymapMatches
-            ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-            : "border-amber-300 bg-amber-50 text-amber-800"
+            ? "border-[var(--color-accent)]/40 bg-[var(--color-accent)]/12 text-[var(--color-accent)]"
+            : "border-amber-400/40 bg-amber-400/12 text-amber-300"
         }`}
       >
         {rec.keymapMatches ? (
@@ -140,9 +140,9 @@ function DumpView({ dump, rec }: Result) {
       {rec.learned.length > 0 && (
         <section>
           <h2 className="mb-2 font-semibold">Encoding especial aprendido (pad ↔ backup)</h2>
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="overflow-x-auto rounded-lg border border-[var(--color-line)]">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-500">
+              <thead className="bg-[var(--color-chip)] text-[var(--color-ink-soft)]">
                 <tr>
                   <th className="px-3 py-2">keycode</th>
                   <th className="px-3 py-2">valor real (pad)</th>
@@ -151,7 +151,7 @@ function DumpView({ dump, rec }: Result) {
               </thead>
               <tbody>
                 {rec.learned.map((m) => (
-                  <tr key={m.keycode} className="border-t border-slate-100">
+                  <tr key={m.keycode} className="border-t border-[var(--color-line)]">
                     <td className="px-3 py-2 font-mono">{m.keycode}</td>
                     <td className="px-3 py-2 font-mono">{hex(m.padValue)}</td>
                     <td className="px-3 py-2 font-mono">
@@ -171,12 +171,12 @@ function DumpView({ dump, rec }: Result) {
           <h2 className="font-semibold">docs/phase0-findings.md</h2>
           <button
             onClick={() => navigator.clipboard?.writeText(md)}
-            className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+            className="rounded border border-[var(--color-line)] px-2 py-1 text-xs text-[var(--color-ink)] hover:bg-[var(--color-chip)]"
           >
             Copiar
           </button>
         </div>
-        <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">{md}</pre>
+        <pre className="overflow-x-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] p-4 text-xs text-[var(--color-ink)]">{md}</pre>
       </section>
     </div>
   );
@@ -195,11 +195,11 @@ function LayerGrid({ index, values, rec }: { index: number; values: number[]; re
             <div
               key={pos}
               className={`rounded-lg border p-2 text-center ${
-                agree ? "border-slate-200 bg-white" : "border-amber-400 bg-amber-50"
+                agree ? "border-[var(--color-line)] bg-[var(--color-card)]" : "border-amber-400 bg-amber-400/12"
               }`}
               title={`pos ${pos} · ${hex(value)}${slot ? ` · backup: ${slot.backup}` : ""}`}
             >
-              <div className="text-[10px] text-slate-400">
+              <div className="text-[10px] text-[var(--color-ink-soft)]">
                 {pos} · {hex(value)}
               </div>
               <div className="truncate font-mono text-xs">{decodeKeycode(value)}</div>
@@ -215,9 +215,9 @@ function EncoderTable({ dump }: { dump: DiscoveryDump }) {
   return (
     <section>
       <h2 className="mb-2 font-semibold">Encoders (ccw / cw)</h2>
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-[var(--color-line)]">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
+          <thead className="bg-[var(--color-chip)] text-[var(--color-ink-soft)]">
             <tr>
               <th className="px-3 py-2">layer</th>
               <th className="px-3 py-2">encoder</th>
@@ -228,7 +228,7 @@ function EncoderTable({ dump }: { dump: DiscoveryDump }) {
           <tbody>
             {dump.encoders.flatMap((perLayer, l) =>
               perLayer.map((e, enc) => (
-                <tr key={`${l}-${enc}`} className="border-t border-slate-100">
+                <tr key={`${l}-${enc}`} className="border-t border-[var(--color-line)]">
                   <td className="px-3 py-2">{l}</td>
                   <td className="px-3 py-2">{enc === 0 ? "roda" : "knob"}</td>
                   <td className="px-3 py-2 font-mono">{decodeKeycode(e.ccw)}</td>
@@ -245,8 +245,8 @@ function EncoderTable({ dump }: { dump: DiscoveryDump }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <div className="text-xs text-slate-400">{label}</div>
+    <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-card)] p-3">
+      <div className="text-xs text-[var(--color-ink-soft)]">{label}</div>
       <div className="font-mono text-lg">{value}</div>
     </div>
   );

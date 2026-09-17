@@ -6,6 +6,10 @@ dist-ssr
 *.local
 *.tsbuildinfo
 
+# blender backups
+*.blend1
+*.blend2
+
 # local editor/agent settings
 .claude/settings.local.json
 # logs
@@ -21,3 +25,8 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+
+# render intermediário do acervo cinematográfico
+3d/render/
+__pycache__/
+*.pyc
