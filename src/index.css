@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
-/* Tokens do design: app ESCURO (os mockups do modo cinematográfico), acento
- * verde. Semânticos primeiro (superfícies/raios) para plugar o design system
- * depois: quando os variables do Figma chegarem, remapeia-se aqui e a UI
- * acompanha. Nenhum componente deve ter cor fixa — se precisar de uma nova,
- * nasce token aqui. */
+/* Tokens do design (Figma "keyboard-map", página V 2.0). O app é ESCURO — o
+ * render ocupa a tela inteira e header/footer flutuam por cima dele. O drawer
+ * é claro e redefine os mesmos tokens no escopo `.theme-drawer`, então os
+ * componentes nunca têm cor fixa: se precisar de uma nova, nasce token aqui. */
 @theme {
-  --color-accent: #22c55e;
+  --color-accent: #2ece5e; /* logo */
   --color-accent-soft: #86efac;
+  --color-online: #2bb373; /* status "Connected" */
   --color-key-selected: #ff9f0a; /* laranja da seleção, dos mockups */
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-logo: "Press Start 2P", ui-monospace, monospace;
 
   /* superfícies */
   --color-bg: #0b0b0d; /* fundo do app (mesmo preto do palco renderizado) */
@@ -19,20 +20,62 @@
   --color-line-strong: #3a3c46; /* borda em hover/foco */
   --color-ink: #e8eaef; /* texto principal */
   --color-ink-soft: #8b91a1; /* texto secundário */
+  --color-ink-faint: #9f9f9f; /* texto terciário (hints, chips inativos) */
 
-  /* controles: no escuro o botão primário é claro, não escuro */
-  --color-btn: #eceef3;
-  --color-btn-ink: #0b0b0d;
-  --color-btn-hover: #ffffff;
+  /* controles */
+  --color-btn: #000000; /* CTA primário: pílula preta (btn_find_device) */
+  --color-btn-ink: #ffffff;
+  --color-btn-hover: #1d1d1d;
   --color-chip: rgba(255, 255, 255, 0.06); /* trilho de segmento, pill inativa */
   --color-chip-hover: rgba(255, 255, 255, 0.12);
 
+  /* footer (node 75:884) */
+  --color-layer-on: #f3f3f3;
+  --color-layer-on-ink: #1d1d1d;
+  --color-layer-off: #747474;
+  --color-cta-ghost: #171717; /* "fazer upload": fundo escuro + borda branca */
+
   /* raios */
-  --radius-card: 16px;
+  --radius-card: 12px;
   --radius-pill: 9999px;
 
   /* tile escuro dos ícones de app (Figma "Software logos", node 50:498) */
   --color-icon-tile: #0d0d10;
+}
+
+/* Drawer claro (node 75:918). Mesmos nomes de token, valores do Figma. */
+.theme-drawer {
+  --color-surface: #fdfdfd;
+  --color-surface-end: #eeeeee; /* gradiente vertical do drawer */
+  --color-card: #ffffff;
+  --color-line: #efefef;
+  --color-line-strong: #e4e4e4;
+  --color-ink: #000000;
+  --color-ink-soft: #666666;
+  --color-ink-faint: #ababab;
+  --color-row-ink: #656565; /* linhas da lista de atalhos */
+  --color-field: #fdfdfd; /* busca */
+  --color-field-line: #f3f3f3;
+  --color-chip: #ededed; /* trilho do seletor Presets/Actions */
+  --color-chip-hover: #e2e2e2;
+  --color-chip-ink: #bebebe;
+  --color-btn: #000000;
+  --color-btn-ink: #ffffff;
+  --color-btn-hover: #262626;
+  --color-drawer-edge: #e6e6e6;
+  color-scheme: light;
+}
+
+/* conteúdo do drawer ao trocar de tecla: entra por baixo, sem saltar */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 html,

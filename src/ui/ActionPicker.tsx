@@ -27,14 +27,14 @@ export function ActionPicker({
   }, [group, query]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-card)]">
+    <div className="flex min-h-0 flex-1 flex-col rounded-[var(--radius-card)] bg-[var(--color-card)]">
       {/* header: título + subtítulo à esquerda, ícones de app à direita */}
-      <div className="flex shrink-0 items-start justify-between gap-4 px-5 pt-4 pb-3">
+      <div className="flex h-[69px] shrink-0 items-center justify-between gap-2.5 px-6">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-[var(--color-ink)]">Preset de apps</h3>
+          <h3 className="text-base text-[var(--color-ink)]">Preset de apps</h3>
           <p className="text-xs text-[var(--color-ink-soft)]">Selecione um app para ver os atalhos</p>
         </div>
-        <div className="flex shrink-0 gap-1.5">
+        <div className="flex shrink-0 gap-2">
           {ACTION_CATALOG.map((g) => {
             const active = g.app === appName;
             return (
@@ -50,7 +50,7 @@ export function ActionPicker({
                   <AppIcon icon={g.icon} size={29} selected={active} dimmed={!active} />
                 </button>
                 {/* tooltip: nome do app no hover */}
-                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-btn)] px-2 py-1 text-[11px] font-medium text-[var(--color-btn-ink)] opacity-0 shadow-md transition group-hover:opacity-100">
+                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-btn)] px-2 py-1 text-[11px] text-[var(--color-btn-ink)] opacity-0 shadow-md transition group-hover:opacity-100">
                   {g.app}
                 </span>
               </div>
@@ -60,21 +60,21 @@ export function ActionPicker({
       </div>
 
       {/* busca */}
-      <div className="shrink-0 px-5">
-        <div className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-surface)] px-3.5 py-2">
+      <div className="shrink-0 px-6">
+        <div className="flex items-center gap-2 rounded-[50px] border border-[var(--color-field-line)] bg-[var(--color-field)] py-[7px] pl-4 pr-[27px]">
           <SearchGlyph />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Pesquisar atalho"
-            className="w-full bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-ink-soft)]"
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] outline-none placeholder:text-[var(--color-row-ink)]"
             spellCheck={false}
           />
         </div>
       </div>
 
       {/* lista rolável de atalhos */}
-      <div className="mt-1 min-h-0 flex-1 overflow-y-auto px-5 pb-3">
+      <div className="mt-2.5 min-h-0 flex-1 overflow-y-auto px-6 pb-5">
         {actions.map((a) => (
           <ActionRow key={a.id} action={a} selected={a.keycode === value} onClick={() => onSelect(a.keycode)} />
         ))}
@@ -98,15 +98,17 @@ function ActionRow({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center justify-between gap-3 border-b border-[var(--color-line)] px-2 py-2.5 text-left text-sm transition last:border-b-0 ${
-        selected
-          ? "rounded-lg bg-[var(--color-accent)]/12 text-[var(--color-ink)]"
-          : "text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+      aria-pressed={selected}
+      className={`flex w-full items-center justify-between gap-2.5 border-b border-[var(--color-line)] py-2 text-left text-xs transition ${
+        selected ? "text-[var(--color-ink)]" : "text-[var(--color-row-ink)] hover:text-[var(--color-ink)]"
       }`}
     >
-      <span className="truncate">{action.label}</span>
+      <span className="flex min-w-0 items-center gap-2 truncate">
+        {selected && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-key-selected)]" />}
+        {action.label}
+      </span>
       {action.hint && (
-        <span className="shrink-0 font-mono text-xs text-[var(--color-ink-soft)]">{action.hint}</span>
+        <span className="shrink-0 text-[var(--color-ink-faint)]">{action.hint}</span>
       )}
     </button>
   );

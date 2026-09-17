@@ -41,3 +41,22 @@ export function FixedFrame({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+/**
+ * Na janela própria (`npm run app`, Chrome em modo app) a barra de título come
+ * parte da altura pedida em --window-size. Corrige pela diferença real entre
+ * janela e área útil, para o app rodar em 1:1 — sem escala, sem tarja. Num
+ * navegador comum não faz nada (o Chrome ignora resizeTo em janelas com abas).
+ */
+export function fitWindowToApp() {
+  if (typeof window === "undefined") return;
+  if (new URLSearchParams(window.location.search).get("window") !== "app") return;
+  const fit = () => {
+    const dw = APP_W - window.innerWidth;
+    const dh = APP_H - window.innerHeight;
+    if (dw === 0 && dh === 0) return;
+    window.resizeTo(window.outerWidth + dw, window.outerHeight + dh);
+  };
+  if (document.readyState === "complete") fit();
+  else window.addEventListener("load", fit, { once: true });
+}

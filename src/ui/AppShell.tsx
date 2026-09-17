@@ -1,17 +1,18 @@
 import { useApp, type PadView, type TransportKind } from "../store/app.ts";
 import { KeyboardRender } from "./KeyboardRender.tsx";
 import { CinematicPad } from "./cinematic/CinematicPad.tsx";
-import { DRAWER_W } from "./cinematic/stage.ts";
+import { CHROME_H, DRAWER_EASE, DRAWER_MS, DRAWER_W } from "./cinematic/stage.ts";
 import { RightPanel } from "./RightPanel.tsx";
 import { Header } from "./Header.tsx";
 import { Footer } from "./Footer.tsx";
 
 /**
- * Layout (nodes 56:3284 sem device → 56:2700 conectado): coluna do teclado
- * (header + pad + footer) à esquerda e o drawer como coluna própria de altura
- * cheia à direita. Header e footer ficam CONTIDOS na coluna do teclado — quando
- * o drawer abre, encolhem com ela em vez de passar por baixo. O pad "acende"
- * (fantasma → vivo) numa transição suave ao conectar.
+ * Layout V 2.0 (Figma nodes 75:334 → 75:1234): o pad ocupa a tela inteira e
+ * header/footer flutuam por cima. O drawer é uma camada de altura cheia que
+ * entra da direita para a esquerda, por cima de tudo (inclusive do footer).
+ *
+ * Não há botão para abrir o drawer: clicar numa tecla abre. Fechar e trocar
+ * de aba ficam no topo do próprio drawer.
  */
 export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
   const { panelCollapsed, connection, connect, connError, padView, setPadView } = useApp();
@@ -20,100 +21,125 @@ export function AppShell({ onOpenDiscovery }: { onOpenDiscovery: () => void }) {
   const drawerOpen = connected && !panelCollapsed;
 
   return (
-    <div className="relative flex h-full overflow-hidden bg-[var(--color-card)] text-[var(--color-ink)]">
-      {/* coluna do teclado: header + pad + footer, contidos aqui */}
-      <section className="flex min-w-0 flex-1 flex-col">
-        <Header />
-
-        <div className="relative flex min-h-0 flex-1 items-center justify-center px-8">
-          {padView === "cinematic" ? (
-            // O palco NÃO encolhe quando o drawer abre: o enquadramento do
-            // render é fixo, então o painel desliza por cima.
-            <div className="absolute inset-0">
-              <CinematicPad interactive={connected} fallback={<PadSvg connected={connected} />} />
-            </div>
-          ) : (
-            <PadSvg connected={connected} />
-          )}
-
-          <PadViewToggle value={padView} onChange={setPadView} />
-
-          {/* controles de conexão: some com fade+slide quando conecta */}
-          <div
-            className="absolute bottom-[7%] flex flex-col items-center"
-            style={{
-              left: "50%",
-              transform: `translateX(-50%) translateY(${connected ? "10px" : "0"})`,
-              opacity: connected ? 0 : 1,
-              pointerEvents: connected ? "none" : "auto",
-              transition: "opacity 400ms ease, transform 400ms ease",
-            }}
-          >
-            <ConnectControls connecting={connecting} onConnect={connect} error={connError} />
-          </div>
+    <div className="relative h-full overflow-hidden bg-[var(--color-bg)] text-[var(--color-ink)]">
+      {/* palco: tela inteira */}
+      {padView === "cinematic" ? (
+        <div className="absolute inset-0">
+          <CinematicPad interactive={connected} fallback={<PadSvg connected={connected} drawerOpen={drawerOpen} />} />
         </div>
-
-        <Footer />
-      </section>
-
-      {/* drawer: coluna própria de altura cheia à direita */}
-      {drawerOpen && (
-        <aside
-          className={
-            padView === "cinematic"
-              ? "absolute right-0 top-0 z-20 h-full border-l border-[var(--color-line)] bg-[var(--color-surface)] shadow-2xl"
-              : "shrink-0 border-l border-[var(--color-line)] bg-[var(--color-surface)]"
-          }
-          style={{ width: DRAWER_W }}
-        >
-          <RightPanel />
-        </aside>
+      ) : (
+        <PadSvg connected={connected} drawerOpen={drawerOpen} />
       )}
 
-      <button
-        onClick={onOpenDiscovery}
-        className="absolute bottom-2 left-4 text-[11px] text-[var(--color-ink-soft)] transition hover:text-[var(--color-ink)]"
+      <Header>
+        <DevLinks padView={padView} onPadView={setPadView} onOpenDiscovery={onOpenDiscovery} />
+      </Header>
+
+      {/* conectar: some com fade+slide quando conecta */}
+      <div
+        className="absolute left-1/2 flex flex-col items-center"
+        style={{
+          top: 778,
+          transform: `translateX(-50%) translateY(${connected ? "10px" : "0"})`,
+          opacity: connected ? 0 : 1,
+          pointerEvents: connected ? "none" : "auto",
+          transition: "opacity 400ms ease, transform 400ms ease",
+        }}
       >
-        Fase 0 · Discovery
-      </button>
+        <ConnectControls connecting={connecting} onConnect={connect} error={connError} />
+      </div>
+
+      <Footer visible={connected} />
+
+      <Drawer open={drawerOpen} />
     </div>
   );
 }
 
-/** Pad em SVG (v1): o pad "acende" (cor final) e desce até a posição de ativo ao conectar. */
-function PadSvg({ connected }: { connected: boolean }) {
+/**
+ * Fica montado mesmo fechado para a saída também ser animada. Fechado, sai da
+ * árvore de foco/leitura (`inert`) — senão Tab cairia em botões invisíveis.
+ */
+function Drawer({ open }: { open: boolean }) {
   return (
-    <div
-      className="w-auto"
+    <aside
+      inert={!open}
+      aria-hidden={!open}
+      className="theme-drawer absolute right-0 top-0 z-30 h-full border-l border-[var(--color-drawer-edge)] text-[var(--color-ink)]"
       style={{
-        aspectRatio: "409 / 469",
-        height: 540, // px: dentro do FixedFrame, vh se refere ao viewport
-        transform: connected ? "translateY(0) scale(1)" : "translateY(-26px) scale(0.985)",
-        filter: connected ? "none" : "grayscale(0.9) brightness(1.15) opacity(0.5)",
-        transition: "transform 700ms cubic-bezier(0.22,0.8,0.24,1), filter 700ms ease-out",
-        willChange: "transform, filter",
+        width: DRAWER_W,
+        background: "linear-gradient(to top, var(--color-surface-end), var(--color-surface))",
+        transform: `translateX(${open ? "0" : "100%"})`,
+        boxShadow: open ? "-24px 0 60px rgba(0,0,0,.35)" : "none",
+        transition: `transform ${DRAWER_MS}ms ${DRAWER_EASE}, box-shadow ${DRAWER_MS}ms ease`,
+        willChange: "transform",
       }}
     >
-      <KeyboardRender interactive={connected} />
+      <RightPanel />
+    </aside>
+  );
+}
+
+/**
+ * Pad em SVG (modo fast): "acende" ao conectar e anda para a esquerda quando o
+ * drawer abre, no mesmo tempo do drawer — nunca fica embaixo dele.
+ */
+function PadSvg({ connected, drawerOpen }: { connected: boolean; drawerOpen: boolean }) {
+  return (
+    <div
+      className="absolute inset-0 flex items-center justify-center"
+      style={{
+        paddingTop: CHROME_H,
+        paddingBottom: CHROME_H,
+        paddingRight: drawerOpen ? DRAWER_W : 0,
+        transition: `padding ${DRAWER_MS}ms ${DRAWER_EASE}`,
+      }}
+    >
+      <div
+        className="w-auto"
+        style={{
+          aspectRatio: "409 / 469",
+          height: 620, // px: dentro do FixedFrame, vh se refere ao viewport
+          transform: connected ? "translateY(0) scale(1)" : "translateY(-26px) scale(0.985)",
+          filter: connected ? "none" : "grayscale(0.9) brightness(1.15) opacity(0.5)",
+          transition: "transform 700ms cubic-bezier(0.22,0.8,0.24,1), filter 700ms ease-out",
+          willChange: "transform, filter",
+        }}
+      >
+        <KeyboardRender interactive={connected} />
+      </div>
     </div>
   );
 }
 
-/** Alterna SVG ↔ 3D pra comparar as duas versões (preferência persistida). */
-function PadViewToggle({ value, onChange }: { value: PadView; onChange: (v: PadView) => void }) {
+/** Controles de desenvolvimento (não estão no Figma): discreto, no header. */
+function DevLinks({
+  padView,
+  onPadView,
+  onOpenDiscovery,
+}: {
+  padView: PadView;
+  onPadView: (v: PadView) => void;
+  onOpenDiscovery: () => void;
+}) {
   return (
-    <div className="absolute right-8 top-2 z-10 inline-flex rounded-full bg-[var(--color-chip)] p-0.5 text-xs">
-      {(["fast", "cinematic"] as const).map((v) => (
-        <button
-          key={v}
-          onClick={() => onChange(v)}
-          className={`rounded-full px-3 py-1 font-semibold uppercase transition ${
-            value === v ? "bg-[var(--color-btn)] text-[var(--color-btn-ink)] shadow-sm" : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
-          }`}
-        >
-          {v === "fast" ? "fast" : "cine"}
-        </button>
-      ))}
+    <div className="flex items-center gap-3 text-[10px] text-[var(--color-ink-soft)]">
+      <button onClick={onOpenDiscovery} className="transition hover:text-[var(--color-ink)]">
+        Fase 0 · Discovery
+      </button>
+      <div className="inline-flex rounded-full bg-[var(--color-chip)] p-0.5">
+        {(["fast", "cinematic"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => onPadView(v)}
+            className={`rounded-full px-2.5 py-0.5 uppercase transition ${
+              padView === v ? "bg-[var(--color-chip-hover)] text-[var(--color-ink)]" : "hover:text-[var(--color-ink)]"
+            }`}
+          >
+            {v === "fast" ? "fast" : "cine"}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -129,10 +155,11 @@ function ConnectControls({
 }) {
   return (
     <div className="flex flex-col items-center gap-2">
+      {/* btn_find_device (node 75:1772) */}
       <button
         disabled={connecting}
         onClick={() => onConnect("webhid")}
-        className="rounded-[var(--radius-pill)] bg-[var(--color-btn)] px-8 py-2.5 text-sm font-semibold text-[var(--color-btn-ink)] shadow-md transition hover:bg-[var(--color-btn-hover)] disabled:opacity-60"
+        className="whitespace-nowrap rounded-[24px] bg-[var(--color-btn)] px-6 py-2 text-[18px] font-semibold text-[var(--color-btn-ink)] transition hover:bg-[var(--color-btn-hover)] disabled:opacity-60"
       >
         {connecting ? "Conectando…" : "Conectar device"}
       </button>

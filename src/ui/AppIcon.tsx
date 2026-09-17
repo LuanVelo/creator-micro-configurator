@@ -26,8 +26,8 @@ export function AppIcon({
 }
 
 /**
- * Tile escuro, fiel ao componente "Software logos": inativo = cinza (grayscale),
- * ativo = colorido, selecionado = colorido + outline azul. (grayscale por inline
+ * Tile fiel ao componente "Software logos": inativo = tile cinza, logo em
+ * grayscale; selecionado = tile escuro, logo colorido + fio azul. (grayscale por inline
  * style: a composição de `filter` do Tailwind v4 não aplica de forma confiável.)
  */
 function Tile({
@@ -47,12 +47,15 @@ function Tile({
         width: size,
         height: size,
         borderRadius: size * 0.2,
-        boxShadow: selected ? "0 0 0 1.5px var(--color-key-selected)" : undefined,
-        filter: dimmed ? "grayscale(1)" : undefined,
+        // Software logos (V 2.0): ativo = tile preto + fio azul; inativo = tile cinza claro, logo em cinza
+        background: dimmed ? "#cfcfcf" : "var(--color-icon-tile)",
+        boxShadow: `inset 0 0 0 ${selected ? 1 : 0.5}px ${selected ? "#2045fd" : "#d9d9d9"}`,
       }}
-      className="grid place-items-center bg-[var(--color-icon-tile)]"
+      className="grid place-items-center transition hover:brightness-95"
     >
-      {children}
+      <span className="grid place-items-center" style={{ filter: dimmed ? "grayscale(1) brightness(0.45)" : undefined }}>
+        {children}
+      </span>
     </div>
   );
 }

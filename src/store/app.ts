@@ -60,8 +60,7 @@ interface AppState {
   selectSlot: (n: number | null) => void;
   setActivePresetId: (id: string) => void;
   setPanelTab: (tab: SidePanelTab) => void;
-  showPanelTab: (tab: SidePanelTab) => void;
-  toggleCollapsed: () => void;
+  closeDrawer: () => void;
   setPadView: (v: PadView) => void;
   setKeycode: (slotIndex: number, keycode: string) => void;
   setEncoder: (encoderIndex: number, dir: "ccw" | "cw", keycode: string) => void;
@@ -116,13 +115,14 @@ export const useApp = create<AppState>()(
       padBaseline: null,
 
       setActiveLayer: (n) => set({ activeLayer: n, selectedSlot: null }),
-      // selecionar uma tecla sempre abre o drawer; desmarcar (null) não força estado.
-      selectSlot: (n) => set((s) => ({ selectedSlot: n, panelCollapsed: n === null ? s.panelCollapsed : false })),
+      // Clicar numa tecla é o ÚNICO jeito de abrir o drawer (V 2.0): abre já na
+      // aba Presets, que é onde está o editor da tecla. Desmarcar não fecha.
+      selectSlot: (n) =>
+        set(n === null ? { selectedSlot: null } : { selectedSlot: n, panelCollapsed: false, panelTab: "presets" }),
       setActivePresetId: (id) => set({ activePresetId: id, selectedSlot: null }),
       setPanelTab: (tab) => set({ panelTab: tab }),
-      // abas do header: abre o drawer naquela aba (sai do editor de tecla).
-      showPanelTab: (tab) => set({ panelTab: tab, selectedSlot: null, panelCollapsed: false }),
-      toggleCollapsed: () => set((s) => ({ panelCollapsed: !s.panelCollapsed })),
+      // controle no topo do drawer: fecha e solta a seleção (a pose volta ao topo).
+      closeDrawer: () => set({ panelCollapsed: true, selectedSlot: null }),
       setPadView: (padView) => set({ padView }),
 
       setKeycode: (slotIndex, keycode) =>

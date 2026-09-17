@@ -1,8 +1,20 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useApp, selectActivePreset } from "../../store/app.ts";
 import { SLOT_LAYOUT } from "../../model/layout.ts";
 import { actionLabelFor, keyLabel } from "../labels.ts";
-import { DRAWER_FRAC, STAGE_H, STAGE_W } from "./stage.ts";
+import {
+  APP_W,
+  DRAWER_EASE,
+  DRAWER_MS,
+  DRAWER_W,
+  RENDER_H,
+  RENDER_W,
+  RENDER_X_CLOSED,
+  RENDER_X_OPEN,
+  STAGE_H,
+  STAGE_W,
+  renderXOpen,
+} from "./stage.ts";
 import {
   assetUrl,
   loadManifest,
@@ -22,6 +34,7 @@ import { mirrorTime, poseForState, reroute, route, type ClipStep } from "./plann
  * Em repouso mostra o still de alta resolução. Em transição toca o clipe e, ao
  * terminar, o still entra num fade — nunca se descansa num frame de vídeo.
  */
+
 
 const SELECT = "#ff9f0a"; // laranja dos mockups
 const HOVER = "#9aa3b2";
@@ -49,11 +62,30 @@ export function CinematicPad({
 
 // ── Player ──────────────────────────────────────────────────────────────────
 
+type Slot = 0 | 1;
+
 interface Playing {
   clip: CinematicClip;
   plan: ClipStep[];
   startAt: number; // segundos, para retomar rebobinando
+  /** qual dos dois <video> toca este clipe (sempre o que está escondido) */
+  slot: Slot;
+  token: number;
 }
+
+/**
+ * Still ↔ vídeo sem piscar. Três camadas, de baixo para cima: vídeo A, vídeo B,
+ * still. Regras:
+ *  - nada é mostrado antes de estar PINTÁVEL: o clipe carrega no vídeo
+ *    escondido e só vira o visível quando entrega o primeiro frame; o still só
+ *    aparece depois de `decode()`;
+ *  - nunca se esconde uma camada sem outra equivalente embaixo: o vídeo que
+ *    acabou fica parado no último frame (= a pose de destino) enquanto o still
+ *    entra por cima; trocar `src` só acontece no vídeo que não aparece.
+ * Sem isso, cada troca de src ou still não decodificado vira um frame preto.
+ */
+const STILL_IN_MS = 240; // longo o bastante para esconder a diferença vídeo↔still
+const STILL_OUT_MS = 90;
 
 function Player({ manifest, interactive }: { manifest: CinematicManifest; interactive: boolean }) {
   const { connection, selectedSlot, panelCollapsed, selectSlot } = useApp();
@@ -64,19 +96,40 @@ function Player({ manifest, interactive }: { manifest: CinematicManifest; intera
   const target = poseForState({ connection, selectedSlot, panelCollapsed });
   const [pose, setPose] = useState<PoseId>(target);
   const [playing, setPlaying] = useState<Playing | null>(null);
+  const [front, setFront] = useState<Slot>(0);
+  const [stillOn, setStillOn] = useState(true);
   const [hovered, setHovered] = useState<number | null>(null);
-  const video = useRef<HTMLVideoElement>(null);
-  const [, bump] = useReducer((n: number) => n + 1, 0);
+  const videoA = useRef<HTMLVideoElement>(null);
+  const videoB = useRef<HTMLVideoElement>(null);
+  const still = useRef<HTMLImageElement>(null);
+  const frontRef = useRef<Slot>(0);
+  const tokenRef = useRef(0);
+  const videoOf = (s: Slot) => (s === 0 ? videoA : videoB).current;
 
   const poseData = useMemo(
     () => manifest.poses.find((p) => p.id === pose) ?? manifest.poses[0],
     [manifest, pose],
   );
 
+  // aquece o acervo: stills decodificados em memória e clipes no cache HTTP,
+  // para a primeira transição não esperar rede
+  useEffect(() => {
+    const held = manifest.poses.map((p) => {
+      const img = new Image();
+      img.src = assetUrl(manifest, p.still.beauty);
+      void img.decode().catch(() => {});
+      return img;
+    });
+    for (const c of manifest.clips) void fetch(assetUrl(manifest, c.file)).catch(() => {});
+    return () => void held.splice(0);
+  }, [manifest]);
+
   const start = useCallback((plan: ClipStep[], at = 0) => {
     const [step, ...rest] = plan;
     if (!step) return false;
-    setPlaying({ clip: step.clip, plan: rest, startAt: at });
+    const token = ++tokenRef.current;
+    const slot: Slot = frontRef.current === 0 ? 1 : 0;
+    setPlaying({ clip: step.clip, plan: rest, startAt: at, slot, token });
     return true;
   }, []);
 
@@ -86,42 +139,88 @@ function Player({ manifest, interactive }: { manifest: CinematicManifest; intera
     if (!playing) {
       const plan = route(manifest, pose, target);
       if (!plan || plan.length === 0) {
-        setPose(target); // sem clipe: corta (o still entra com crossfade)
+        setPose(target); // sem clipe: corta (o still só troca depois de decodificado)
         return;
       }
       start(plan);
       return;
     }
-    // já está tocando: continua ou rebobina
-    if (playing.clip.to === target) return;
+    // já está tocando: continua ou rebobina. Se o plano atual já chega no alvo
+    // (ex.: edit→top→knob), não mexe — reescrever `playing` aqui realimenta o
+    // efeito e atropela o próximo clipe quando o atual termina.
+    const destination = playing.plan.at(-1)?.clip.to ?? playing.clip.to;
+    if (destination === target) return;
     const decision = reroute(manifest, { clip: playing.clip }, target);
     if (!decision) return;
     if (decision.kind === "continue") {
       setPlaying({ ...playing, plan: decision.plan });
     } else {
-      const t = video.current?.currentTime ?? 0;
-      setPlaying({ clip: decision.clip, plan: decision.plan, startAt: mirrorTime(playing.clip, t) });
+      const t = videoOf(playing.slot)?.currentTime ?? 0;
+      start([{ clip: decision.clip }, ...decision.plan], mirrorTime(playing.clip, t));
     }
+    // videoOf lê refs; não entra nas dependências
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, pose, playing, manifest, start]);
 
-  // toca o clipe atual
+  // toca o clipe no vídeo escondido; só o revela quando o 1º frame existe
+  const playingToken = playing?.token;
   useEffect(() => {
-    const el = video.current;
-    if (!el || !playing) return;
+    if (!playing) return;
+    const el = videoOf(playing.slot);
+    if (!el) return;
+    const { slot, token } = playing;
+    let done = false;
+    const reveal = () => {
+      if (done || tokenRef.current !== token) return;
+      done = true;
+      const other = videoOf(slot === 0 ? 1 : 0);
+      frontRef.current = slot;
+      setFront(slot);
+      setStillOn(false);
+      other?.pause();
+    };
     el.src = assetUrl(manifest, playing.clip.file);
     el.currentTime = playing.startAt;
-    void el.play().catch(() => {
-      // sem codec (Windows N, WebView sem Media Foundation): corta para o destino
-      setPose(playing.clip.to);
-      setPlaying(null);
-    });
-  }, [playing, manifest]);
+    el.play().then(
+      () => {
+        if (typeof el.requestVideoFrameCallback === "function") el.requestVideoFrameCallback(reveal);
+        // rede de segurança: alguns WebViews não chamam o callback em vídeo invisível
+        setTimeout(reveal, 150);
+      },
+      () => {
+        // sem codec (Windows N, WebView sem Media Foundation): corta para o destino
+        if (tokenRef.current !== token) return;
+        setPose(playing.clip.to);
+        setPlaying(null);
+      },
+    );
+    return () => {
+      done = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingToken, manifest]);
 
-  const onEnded = () => {
-    if (!playing) return;
+  const onEnded = (slot: Slot) => {
+    if (!playing || playing.slot !== slot) return; // fim de um clipe já abandonado
     setPose(playing.clip.to);
+    // encadeado (via hub): o último frame fica na tela até o próximo clipe pintar
     if (!start(playing.plan)) setPlaying(null);
   };
+
+  // em repouso: o still entra por cima do vídeo parado, só depois de decodificado
+  useEffect(() => {
+    if (playing || stillOn) return;
+    const img = still.current;
+    if (!img) return;
+    let alive = true;
+    img
+      .decode()
+      .catch(() => {})
+      .then(() => alive && setStillOn(true));
+    return () => {
+      alive = false;
+    };
+  }, [playing, stillOn, pose]);
 
   useEffect(() => {
     document.body.style.cursor = hovered !== null ? "pointer" : "";
@@ -130,40 +229,63 @@ function Player({ manifest, interactive }: { manifest: CinematicManifest; intera
     };
   }, [hovered]);
 
-  const clickable = interactive && !playing;
+  const clickable = interactive && !playing && stillOn;
   const onSelect = (slot: number) =>
     selectSlot(panelCollapsed ? slot : selectedSlot === slot ? null : slot);
 
+  // A caixa do render desliza junto com o drawer (ver stage.ts): segue o ALVO,
+  // não a pose exibida, para andar durante o clipe e não depois dele.
+  const boxX = connection === "connected" && !panelCollapsed ? RENDER_X_OPEN : RENDER_X_CLOSED;
+
+  const videoProps = (slot: Slot) => ({
+    ref: slot === 0 ? videoA : videoB,
+    muted: true,
+    playsInline: true,
+    preload: "auto" as const,
+    onEnded: () => onEnded(slot),
+    className: "absolute inset-0 h-full w-full object-cover",
+    // sem `filter`: medido no Chrome, vídeo e still diferem ~0,3% de brilho
+    style: { opacity: front === slot ? 1 : 0 },
+  });
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0b0b0d]" onMouseLeave={() => setHovered(null)}>
-      <img
-        src={assetUrl(manifest, poseData.still.beauty)}
-        alt=""
-        draggable={false}
-        onLoad={bump}
-        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-150"
-        style={{ opacity: playing ? 0 : 1 }}
-      />
-      <video
-        ref={video}
-        muted
-        playsInline
-        preload="auto"
-        onEnded={onEnded}
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ opacity: playing ? 1 : 0 }}
-      />
-
-      {clickable && (
-        <SlotOverlay
-          pose={poseData}
-          hovered={hovered}
-          selected={selectedSlot}
-          onHover={setHovered}
-          onSelect={onSelect}
-          keycodeOf={(slot) => keys[slot] ?? "KC_NO"}
+      <div
+        className="absolute top-0"
+        style={{
+          left: 0,
+          width: RENDER_W,
+          height: RENDER_H,
+          transform: `translateX(${boxX}px)`,
+          transition: `transform ${DRAWER_MS}ms ${DRAWER_EASE}`,
+        }}
+      >
+        <video {...videoProps(0)} />
+        <video {...videoProps(1)} />
+        <img
+          ref={still}
+          src={assetUrl(manifest, poseData.still.beauty)}
+          alt=""
+          draggable={false}
+          decoding="sync"
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{
+            opacity: stillOn ? 1 : 0,
+            transition: `opacity ${stillOn ? STILL_IN_MS : STILL_OUT_MS}ms ease`,
+          }}
         />
-      )}
+
+        {clickable && (
+          <SlotOverlay
+            pose={poseData}
+            hovered={hovered}
+            selected={selectedSlot}
+            onHover={setHovered}
+            onSelect={onSelect}
+            keycodeOf={(slot) => keys[slot] ?? "KC_NO"}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -174,7 +296,7 @@ function usable(pose: CinematicPose, a: SlotAnchor): boolean {
   if (!a.visible) return false;
   if (SLOT_LAYOUT[a.slot]?.role === "logo") return false;
   // com o drawer aberto, o que está embaixo dele não é clicável
-  return pose.drawer === "closed" || a.center[0] < 1 - DRAWER_FRAC;
+  return pose.drawer === "closed" || renderXOpen(a.center[0]) < APP_W - DRAWER_W;
 }
 
 function SlotOverlay({
@@ -199,6 +321,7 @@ function SlotOverlay({
     [pose],
   );
   const tip = hovered !== null ? pose.anchors[hovered] : null;
+  const selectedAnchor = anchors.find((a) => a.slot === selected) ?? null;
 
   return (
     <>
@@ -215,8 +338,8 @@ function SlotOverlay({
               key={a.slot}
               points={a.quad.map(([x, y]) => `${x * STAGE_W},${y * STAGE_H}`).join(" ")}
               fill={isHov ? "rgba(255,255,255,.08)" : "transparent"}
-              stroke={isSel ? SELECT : isHov ? HOVER : "none"}
-              strokeWidth={isSel ? 3 : 2}
+              stroke={isHov && !isSel ? HOVER : "none"}
+              strokeWidth={2}
               strokeLinejoin="round"
               className="cursor-pointer outline-none"
               tabIndex={0}
@@ -234,10 +357,66 @@ function SlotOverlay({
             />
           );
         })}
+        {selectedAnchor && <SelectionOutline quad={selectedAnchor.quad} />}
       </svg>
 
       {tip && <Tooltip anchor={tip} kc={keycodeOf(tip.slot)} />}
     </>
+  );
+}
+
+type Quad = SlotAnchor["quad"];
+const SELECT_MS = 320;
+
+/**
+ * Contorno de seleção. Trocar de tecla não tem clipe (as duas estão na mesma
+ * pose), então o movimento vem daqui: o quad desliza e se deforma da tecla
+ * anterior até a nova. Sem seleção anterior, nasce com um leve "assentar".
+ */
+function SelectionOutline({ quad }: { quad: Quad }) {
+  const [shape, setShape] = useState<Quad>(quad);
+  const [born, setBorn] = useState(false);
+  const current = useRef<Quad>(quad);
+
+  useEffect(() => {
+    const from = current.current;
+    if (from === quad) return;
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (now: number) => {
+      const u = Math.min(1, (now - t0) / SELECT_MS);
+      const e = 1 - Math.pow(1 - u, 3); // ease-out cúbico
+      const next = quad.map(([x, y], i) => [from[i][0] + (x - from[i][0]) * e, from[i][1] + (y - from[i][1]) * e]) as Quad;
+      current.current = u < 1 ? next : quad;
+      setShape(current.current);
+      if (u < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [quad]);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setBorn(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const cx = (shape[0][0] + shape[2][0]) / 2;
+  const cy = (shape[0][1] + shape[2][1]) / 2;
+  return (
+    <polygon
+      points={shape.map(([x, y]) => `${x * STAGE_W},${y * STAGE_H}`).join(" ")}
+      fill="rgba(255,159,10,.06)"
+      stroke={SELECT}
+      strokeWidth={3}
+      strokeLinejoin="round"
+      pointerEvents="none"
+      style={{
+        transformOrigin: `${cx * STAGE_W}px ${cy * STAGE_H}px`,
+        transform: born ? "scale(1)" : "scale(1.12)",
+        opacity: born ? 1 : 0,
+        transition: "transform 260ms cubic-bezier(0.22,0.8,0.24,1), opacity 180ms ease",
+      }}
+    />
   );
 }
 

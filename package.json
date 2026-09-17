@@ -6,6 +6,7 @@
   "description": "Configurador sob medida para o Work Louder Creator Micro (Figma Edition)",
   "scripts": {
     "dev": "vite",
+    "app": "node scripts/app.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",

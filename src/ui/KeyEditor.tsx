@@ -4,7 +4,6 @@ import { SLOT_LAYOUT, ENCODER_OF_SLOT } from "../model/layout.ts";
 import { isValidKeycode } from "../model/keycodes.ts";
 import { keyLabel } from "./labels.ts";
 import { ActionPicker } from "./ActionPicker.tsx";
-import { Keycap3D } from "./Keycap3D.tsx";
 
 type Target = "click" | "ccw" | "cw";
 
@@ -21,7 +20,7 @@ export function KeyEditor() {
 }
 
 function SlotEditor({ slotIndex }: { slotIndex: number }) {
-  const { activeLayer, selectSlot, setKeycode, setEncoder } = useApp();
+  const { activeLayer, setKeycode, setEncoder } = useApp();
   const preset = useApp(selectActivePreset);
 
   const slot = SLOT_LAYOUT[slotIndex];
@@ -61,26 +60,15 @@ function SlotEditor({ slotIndex }: { slotIndex: number }) {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* topo: keycap 3D + fechar */}
-      <div className="relative shrink-0">
-        <button
-          onClick={() => selectSlot(null)}
-          title="Fechar"
-          className="absolute right-4 top-3 z-10 grid h-7 w-7 place-items-center rounded-full text-[var(--color-ink-soft)] transition hover:bg-[var(--color-chip)] hover:text-[var(--color-ink)]"
-        >
-          ✕
-        </button>
-        <Keycap3D className="h-[150px] w-full" />
-      </div>
-
-      {/* conteúdo rolável */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4">
-        {/* Código da tecla */}
-        <section className="shrink-0 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-card)] px-5 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h3 className="text-[15px] font-semibold text-[var(--color-ink)]">
+    // fechar e abas ficam no DrawerNav (RightPanel), no topo do drawer.
+    // Remonta a cada tecla (key no pai), então a entrada anima a cada troca.
+    <div className="flex h-full min-h-0 flex-col animate-[panel-in_280ms_cubic-bezier(0.22,0.8,0.24,1)]">
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+        {/* Código da tecla (node 75:929) */}
+        <section className="shrink-0 rounded-[var(--radius-card)] bg-[var(--color-card)] px-6 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-[316px] shrink-0">
+              <h3 className="text-base text-[var(--color-ink)]">
                 {isEncoder ? slot.label : "Código da tecla"}
               </h3>
               <p className="text-xs text-[var(--color-ink-soft)]">Formato VIA</p>
@@ -89,7 +77,7 @@ function SlotEditor({ slotIndex }: { slotIndex: number }) {
           </div>
 
           {isEncoder && (
-            <div className="mt-3 inline-flex rounded-lg bg-[var(--color-surface)] p-0.5 text-xs">
+            <div className="mt-3 inline-flex rounded-[40px] bg-[var(--color-chip)] p-0.5 text-xs">
               <TargetTab tab="click" target={target} setTarget={setTarget} dirty={drafts.click !== committed("click")}>
                 Click
               </TargetTab>
@@ -107,13 +95,13 @@ function SlotEditor({ slotIndex }: { slotIndex: number }) {
         <ActionPicker value={draft} onSelect={setDraft} />
       </div>
 
-      {/* rodapé: Salvar explícito (Frame 33) */}
-      <div className="flex shrink-0 items-center justify-center gap-3 border-t border-[var(--color-line)] px-6 py-3">
+      {/* Salvar explícito — ocupa o espaço reservado no fim do drawer (node 75:1001) */}
+      <div className="flex h-[54px] shrink-0 items-end justify-center gap-3">
         {dirty && allValid && <span className="text-xs text-[var(--color-ink-soft)]">alterações não salvas</span>}
         <button
           onClick={save}
           disabled={!dirty || !allValid}
-          className="rounded-[var(--radius-pill)] bg-[var(--color-btn)] px-8 py-2 text-sm font-semibold text-[var(--color-btn-ink)] shadow-sm transition enabled:hover:bg-[var(--color-btn-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[var(--radius-pill)] bg-[var(--color-btn)] px-10 py-2 text-sm text-[var(--color-btn-ink)] shadow-sm transition enabled:hover:bg-[var(--color-btn-hover)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Salvar
         </button>
@@ -140,11 +128,11 @@ function TargetTab({
     <button
       onClick={() => setTarget(tab)}
       className={`rounded-md px-2.5 py-1 font-medium transition ${
-        active ? "bg-[var(--color-card)] text-[var(--color-ink)] shadow-sm" : "text-[var(--color-ink-soft)]"
+        active ? "rounded-[40px] bg-[var(--color-btn)] text-[var(--color-btn-ink)]" : "rounded-[40px] text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
       }`}
     >
       {children}
-      {dirty && <span className="ml-1 text-[var(--color-accent)]">•</span>}
+      {dirty && <span className="ml-1 text-[var(--color-key-selected)]">•</span>}
     </button>
   );
 }
@@ -172,8 +160,8 @@ function CodePill({ value, onChange }: { value: string; onChange: (kc: string) =
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur();
         }}
-        className={`w-[150px] rounded-[var(--radius-pill)] border px-4 py-2 text-right font-mono text-sm outline-none ${
-          valid ? "border-[var(--color-accent)]" : "border-red-400 bg-red-500/12"
+        className={`h-[33px] min-w-0 flex-1 rounded-[35px] border bg-[var(--color-card)] px-[26px] font-mono text-sm text-[var(--color-ink)] outline-none ${
+          valid ? "border-[var(--color-ink)]" : "border-red-400 bg-red-500/10"
         }`}
         spellCheck={false}
       />
@@ -187,10 +175,10 @@ function CodePill({ value, onChange }: { value: string; onChange: (kc: string) =
         setEditing(true);
       }}
       title="Clique para digitar o keycode"
-      className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-card)] px-4 py-2 transition hover:border-[var(--color-line-strong)]"
+      className="flex h-[33px] min-w-0 flex-1 items-center gap-2 overflow-hidden whitespace-nowrap rounded-[35px] border border-[var(--color-line-strong)] bg-[var(--color-card)] px-[26px] text-base transition hover:border-[var(--color-ink-soft)]"
     >
-      <span className="text-sm font-semibold text-[var(--color-ink)]">{label}</span>
-      <span className="font-mono text-xs text-[var(--color-ink-soft)]">({value})</span>
+      <span className="text-[var(--color-ink)]">{label}</span>
+      <span className="truncate text-[#b4b4b4]">({value})</span>
     </button>
   );
 }
