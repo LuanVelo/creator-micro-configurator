@@ -4,16 +4,9 @@ import { SLOT_LAYOUT } from "../../model/layout.ts";
 import { actionLabelFor, keyLabel } from "../labels.ts";
 import {
   APP_W,
-  DRAWER_EASE,
-  DRAWER_MS,
   DRAWER_W,
-  RENDER_H,
-  RENDER_W,
-  RENDER_X_CLOSED,
-  RENDER_X_OPEN,
   STAGE_H,
   STAGE_W,
-  renderXOpen,
 } from "./stage.ts";
 import {
   assetUrl,
@@ -233,10 +226,6 @@ function Player({ manifest, interactive }: { manifest: CinematicManifest; intera
   const onSelect = (slot: number) =>
     selectSlot(panelCollapsed ? slot : selectedSlot === slot ? null : slot);
 
-  // A caixa do render desliza junto com o drawer (ver stage.ts): segue o ALVO,
-  // não a pose exibida, para andar durante o clipe e não depois dele.
-  const boxX = connection === "connected" && !panelCollapsed ? RENDER_X_OPEN : RENDER_X_CLOSED;
-
   const videoProps = (slot: Slot) => ({
     ref: slot === 0 ? videoA : videoB,
     muted: true,
@@ -250,16 +239,8 @@ function Player({ manifest, interactive }: { manifest: CinematicManifest; intera
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0b0b0d]" onMouseLeave={() => setHovered(null)}>
-      <div
-        className="absolute top-0"
-        style={{
-          left: 0,
-          width: RENDER_W,
-          height: RENDER_H,
-          transform: `translateX(${boxX}px)`,
-          transition: `transform ${DRAWER_MS}ms ${DRAWER_EASE}`,
-        }}
-      >
+      {/* o render cobre a tela: quem tira o pad de baixo do drawer é o clipe */}
+      <div className="absolute inset-0">
         <video {...videoProps(0)} />
         <video {...videoProps(1)} />
         <img
@@ -296,7 +277,7 @@ function usable(pose: CinematicPose, a: SlotAnchor): boolean {
   if (!a.visible) return false;
   if (SLOT_LAYOUT[a.slot]?.role === "logo") return false;
   // com o drawer aberto, o que está embaixo dele não é clicável
-  return pose.drawer === "closed" || renderXOpen(a.center[0]) < APP_W - DRAWER_W;
+  return pose.drawer === "closed" || a.center[0] * APP_W < APP_W - DRAWER_W;
 }
 
 function SlotOverlay({

@@ -122,7 +122,7 @@ def autoshift(pose, aspect):
     if pose.shift_x is None:
         cam_data.shift_x = (c[0] - P.SUBJECT_X_TARGET) * aspect
     if pose.shift_y is None:
-        cam_data.shift_y = P.SUBJECT_Y_TARGET - c[1]
+        cam_data.shift_y = P.SUBJECT_Y_BY_POSE.get(pose.id, P.SUBJECT_Y_TARGET) - c[1]
     bpy.context.view_layer.update()
     after = subject_center(pose)
     print(f"   enquadrou {pose.id}: sujeito ({c[0]:.3f}, {c[1]:.3f}) → "
@@ -264,7 +264,9 @@ def main():
     t0 = time.time()
     manifest = {
         "version": 1,
-        "rev": str(int(os.path.getmtime(bpy.data.filepath))),
+        # rev = horário do render, não do .blend: mudar só poses.py também gera
+        # arquivos novos, e o app usa o rev para furar o cache do navegador
+        "rev": str(int(time.time())),
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "blend": os.path.basename(bpy.data.filepath),
         "origin": "top-left",

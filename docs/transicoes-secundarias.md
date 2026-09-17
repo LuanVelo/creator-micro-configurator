@@ -1,6 +1,7 @@
 # Transições secundárias — brief para o PC do Blender
 
-Escrito em 2026-09-16. **Nada deste documento foi executado.** Render e Blender
+Escrito em 2026-09-16. **Executado em 2026-09-17** no PC do Blender (Lilith), junto com o
+re-render em 1440×900 (tela cheia) e o reenquadramento de idle/top/edit. Render e Blender
 rodam só no outro PC; este Mac só mexe no app.
 
 Branch: `feat/keyboard-3d`. No outro PC: `git pull` antes de começar.

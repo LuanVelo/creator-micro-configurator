@@ -22,19 +22,24 @@ describe("planner", () => {
     expect(connected(5)).toBe(connected(9));
   });
 
-  it("roteia pelo hub quando não existe clipe direto", () => {
+  it("roteia direto entre poses abertas e pelo hub no resto", () => {
     expect(route(manifest, "top", "top")).toEqual([]);
     expect(route(manifest, "top", "knob")).toHaveLength(1);
-    const cross = route(manifest, "knob", "wheel");
+    // anel das poses de drawer aberto: não volta ao topo
+    expect(route(manifest, "edit", "knob")).toHaveLength(1);
+    expect(route(manifest, "knob", "wheel")).toHaveLength(1);
+    expect(route(manifest, "wheel", "edit")).toHaveLength(1);
+    // sem clipe direto, passa pelo hub
+    const cross = route(manifest, "idle", "edit");
     expect(cross).toHaveLength(2);
     expect(cross![0].clip.to).toBe(manifest.hub);
-    expect(cross![1].clip.to).toBe("wheel");
+    expect(cross![1].clip.to).toBe("edit");
   });
 
   it("rebobina quando o alvo muda para trás no meio da transição", () => {
     const [step] = route(manifest, "top", "knob")!;
-    // indo para o knob, o usuário pede a roda: knob→wheel ainda passa pelo hub,
-    // então seguir em frente é válido
+    // indo para o knob, o usuário pede a roda: existe knob→wheel direto, então
+    // seguir em frente é válido
     expect(reroute(manifest, step, "wheel")?.kind).toBe("continue");
     // indo do knob para o topo, pedir o knob de novo = rebobinar
     const [back] = route(manifest, "knob", "top")!;
