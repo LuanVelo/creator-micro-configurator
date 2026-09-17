@@ -72,8 +72,9 @@ export const manifestSchema = z.object({
 });
 export type CinematicManifest = z.infer<typeof manifestSchema>;
 
-export const MANIFEST_URL = "/cinematic/manifest.json";
-const BASE = "/cinematic/";
+// BASE_URL do Vite: "/" em dev, "/creator-micro-configurator/" no GitHub Pages
+const BASE = `${import.meta.env.BASE_URL}cinematic/`;
+export const MANIFEST_URL = `${BASE}manifest.json`;
 
 /** URL de um arquivo do acervo, com a revisão para furar cache. */
 export function assetUrl(manifest: CinematicManifest, file: string): string {

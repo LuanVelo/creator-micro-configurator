@@ -7,7 +7,7 @@
  */
 import { SLOT_LAYOUT } from "../../model/layout.ts";
 
-export const MODEL_URL = "/models/creator-micro.glb";
+export const MODEL_URL = `${import.meta.env.BASE_URL}models/creator-micro.glb`;
 
 export type Vec3 = [number, number, number];
 
