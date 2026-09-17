@@ -74,6 +74,10 @@ cima. Se o palco encolhesse, o enquadramento mudaria e a imagem saltaria.
 
 ## 4. Acervo v1
 
+> **Atualização 2026-09-16:** as poses de drawer aberto vão ganhar clipes diretos entre
+> si (anel `edit`/`knob`/`wheel`), para não voltar ao `top` ao trocar de tecla. Ver
+> `docs/transicoes-secundarias.md`.
+
 Cinco poses de descanso, quatro pares de clipe, hub em `top`:
 
 ```
